@@ -27,6 +27,7 @@
         "doctrine/orm": "^4",
         "kipchak/core": "2.x-dev",
         "kipchak/driver-memcached": "dev-master",
-        "kipchak/driver-filecache": "dev-master"
+        "kipchak/driver-filecache": "dev-master",
+        "kipchak/driver-logger": "dev-master"
     }
 }

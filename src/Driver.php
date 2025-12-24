@@ -5,6 +5,7 @@ namespace Kipchak\Driver\Doctrine;
 use Kipchak\Core\Interfaces;
 use Psr\Container\ContainerInterface;
 use Kipchak\Driver\Config\Driver as Config;
+use Kipchak\Driver\Logger\Driver as Logger;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Kipchak\Driver\Memcached\Driver as MemcachedDriver;
@@ -49,7 +50,7 @@ class Driver implements Interfaces\Driver
         if (isset(Config::get('kipchak.doctrine')['orm'])  && Config::get('kipchak.doctrine')['orm']['enabled']) {
             $ormConfig = Config::get('kipchak.doctrine')['orm'];
             $entityManagers = $ormConfig['entity_managers'];
-            $log = self::$container->get('drivers.logger');
+            $log = Logger::get();
             foreach ($entityManagers as $emName => $emConnection) {
                 self::$container->set('drivers.database.doctrine.entitymanager.' . $emName, function (ContainerInterface $c) use ($emName, $emConnection, $log): EntityManager {
                     if (!is_dir($emConnection['cache_config']['file']['dir'])) {
