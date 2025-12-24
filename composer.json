@@ -4,7 +4,10 @@
     "description": "A Kipchak Doctrine driver (dependency) for the Kipchak API Development Kit (ADK)",
     "keywords": [
         "APIs",
-        "CouchDB",
+        "Doctrine",
+        "MySQL",
+        "PGSQL",
+        "ORM",
         "Microservices",
         "Mamluk"
     ],
