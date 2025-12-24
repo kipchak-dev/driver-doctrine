@@ -1,0 +1,29 @@
+{
+    "name": "kipchak/driver-doctrine",
+    "type": "middleware",
+    "description": "A Kipchak Doctrine driver (dependency) for the Kipchak API Development Kit (ADK)",
+    "keywords": [
+        "APIs",
+        "CouchDB",
+        "Microservices",
+        "Mamluk"
+    ],
+    "homepage": "https://mamluk.net",
+    "license": "MIT",
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Kipchak\\Driver\\Doctrine\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "doctrine/orm": "^4",
+        "kipchak/core": "2.x-dev",
+        "kipchak/driver-memcached": "dev-master",
+        "kipchak/driver-filecache": "dev-master"
+    }
+}
