@@ -14,7 +14,7 @@ use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\DBAL\Connection;
 
-class Driver implements Interfaces\Driver
+class Doctrine implements Interfaces\Driver
 {
     protected static ContainerInterface $container;
 
