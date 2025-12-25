@@ -9,7 +9,7 @@ use Kipchak\Driver\Logger\Driver as Logger;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Kipchak\Driver\Memcached\Driver as MemcachedDriver;
-use Kipchak\Driver\Filecache\Driver as FilecacheDriver;;
+use Kipchak\Driver\Filecache\Driver as FilecacheDriver;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\DBAL\Connection;
@@ -18,17 +18,18 @@ class Driver implements Interfaces\Driver
 {
     protected static ContainerInterface $container;
 
-    public static function initialise(ContainerInterface $container): void
+    public static function initialise(ContainerInterface $container, ?string $configFileName = null): void
     {
         self::$container = $container;
-        self::set();
+        self::set($configFileName);
     }
 
-    public static function set(): void
+    public static function set(?string $configFileName = null): void
     {
+        $configFileName = $configFileName ?? 'kipchak.doctrine';
         // Create all Doctrine DBAL Connections
-        if (!empty(Config::get('kipchak.doctrine')['dbal'])  && Config::get('kipchak.doctrine')['dbal']['enabled']) {
-            $dbalConfig = Config::get('kipchak.doctrine')['dbal'];
+        if (!empty(Config::get($configFileName)['dbal'])  && Config::get($configFileName)['dbal']['enabled']) {
+            $dbalConfig = Config::get($configFileName)['dbal'];
             $dbalConnections = $dbalConfig['connections'];
             foreach ($dbalConnections as $dbalConnectionName => $dbalConnection) {
                 self::$container->set('drivers.database.doctrine.dbal.' . $dbalConnectionName, function (ContainerInterface $c) use ($dbalConnectionName, $dbalConnection): Connection {
@@ -48,12 +49,12 @@ class Driver implements Interfaces\Driver
         }
 
 // Create all Doctrine Entity Managers
-        if (isset(Config::get('kipchak.doctrine')['orm'])  && Config::get('kipchak.doctrine')['orm']['enabled']) {
-            $ormConfig = Config::get('kipchak.doctrine')['orm'];
+        if (isset(Config::get($configFileName)['orm'])  && Config::get($configFileName)['orm']['enabled']) {
+            $ormConfig = Config::get($configFileName)['orm'];
             $entityManagers = $ormConfig['entity_managers'];
             $log = Logger::get();
             foreach ($entityManagers as $emName => $emConnection) {
-                self::$container->set('drivers.database.doctrine.entitymanager.' . $emName, function (ContainerInterface $c) use ($emName, $emConnection, $log): EntityManager {
+                self::$container->set('drivers.database.doctrine.entitymanager.' . $emName, function (ContainerInterface $c) use ($emName, $emConnection, $log, $configFileName): EntityManager {
                     if (!is_dir($emConnection['cache_config']['file']['dir'])) {
                         $log->debug('Doctrine ORM: Creating Cache Directory '. $emConnection['cache_config']['file']['dir'] . '.');
                         mkdir ($emConnection['cache_config']['file']['dir'], 0777, true);
@@ -96,7 +97,7 @@ class Driver implements Interfaces\Driver
 
                     return new EntityManager(
                         DriverManager::getConnection(
-                            Config::get('kipchak.doctrine')['dbal']['connections'][$emConnection['connection']]
+                            Config::get($configFileName)['dbal']['connections'][$emConnection['connection']]
                         )
                         , $emConfig
                     );
