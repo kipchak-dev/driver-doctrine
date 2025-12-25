@@ -895,7 +895,7 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/core",
-                "reference": "0f281087fc476a80864b4aa8bcb73a320c150da3"
+                "reference": "f89b0ac7143bd09cfcc1ec1f57b9b2c8d77f5e21"
             },
             "require": {
                 "cuyz/valinor": "^1.17",
@@ -924,7 +924,7 @@
                 "apis",
                 "microservices"
             ],
-            "time": "2025-12-25T08:02:10+00:00"
+            "time": "2025-12-25T09:09:00+00:00"
         },
         {
             "name": "kipchak/driver-config",
@@ -932,7 +932,7 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/config",
-                "reference": "5a7dfaef57a87217c3bb5cdd0ded81e84990d505"
+                "reference": "20867eb0bdf56da07e60de8e52372a91f883c7f7"
             },
             "require": {
                 "kipchak/core": "2.x-dev"
@@ -957,7 +957,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2025-12-25T07:58:14+00:00"
+            "time": "2025-12-25T09:56:25+00:00"
         },
         {
             "name": "kipchak/driver-filecache",
@@ -965,7 +965,7 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "0f27ae6401cd6c324f63c601caeab112c4b5bf21"
+                "reference": "0bc5445d4163e57d9a0e0e0bc635c6f6e4e9a66b"
             },
             "require": {
                 "kipchak/core": "2.x-dev",
@@ -991,7 +991,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2025-12-25T07:56:49+00:00"
+            "time": "2025-12-25T10:13:46+00:00"
         },
         {
             "name": "kipchak/driver-logger",
@@ -999,7 +999,7 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "a8ae519901acd9d36b6ce18d881cc8f87565cf28"
+                "reference": "110b161cfeb20ebe6bcf44220e8755ab7951e222"
             },
             "require": {
                 "kipchak/core": "2.x-dev",
@@ -1026,7 +1026,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2025-12-25T07:59:41+00:00"
+            "time": "2025-12-25T10:01:36+00:00"
         },
         {
             "name": "kipchak/driver-memcached",
@@ -1034,11 +1034,12 @@
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/memcached",
-                "reference": "f1928dcd3066bbf3fa5d5e5a2ee736d469b7c6ff"
+                "reference": "fef8c471e806721b43ec4e4009f6d34d2d038501"
             },
             "require": {
                 "ext-memcached": "*",
                 "kipchak/core": "2.x-dev",
+                "kipchak/driver-config": "dev-master",
                 "symfony/cache": "^6.4"
             },
             "default-branch": true,
@@ -1060,7 +1061,7 @@
                 "memcached",
                 "microservices"
             ],
-            "time": "2025-12-24T10:14:47+00:00"
+            "time": "2025-12-25T10:10:07+00:00"
         },
         {
             "name": "laravel/serializable-closure",

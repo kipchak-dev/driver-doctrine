@@ -4,12 +4,12 @@ namespace Kipchak\Driver\Doctrine;
 
 use Kipchak\Core\Interfaces;
 use Psr\Container\ContainerInterface;
-use Kipchak\Driver\Config\Driver as Config;
-use Kipchak\Driver\Logger\Driver as Logger;
+use Kipchak\Driver\Config\Config;
+use Kipchak\Driver\Logger\Logger;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
-use Kipchak\Driver\Memcached\Driver as MemcachedDriver;
-use Kipchak\Driver\Filecache\Driver as FilecacheDriver;
+use Kipchak\Driver\Memcached\Memcached as MemcachedDriver;
+use Kipchak\Driver\Filecache\Filecache as FilecacheDriver;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\DBAL\Connection;
