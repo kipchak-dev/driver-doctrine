@@ -1,7 +1,7 @@
 {
     "name": "kipchak/driver-doctrine",
-    "type": "middleware",
-    "description": "A Kipchak Doctrine driver (dependency) for the Kipchak API Development Kit (ADK)",
+    "type": "driver",
+    "description": "A Doctrine driver (dependency) for the Kipchak API Development Kit (ADK)",
     "keywords": [
         "APIs",
         "Doctrine",
@@ -25,9 +25,9 @@
     "prefer-stable": true,
     "require": {
         "doctrine/orm": "^4",
-        "kipchak/core": "2.x-dev",
-        "kipchak/driver-memcached": "dev-master",
-        "kipchak/driver-filecache": "dev-master",
-        "kipchak/driver-logger": "dev-master"
+        "kipchak/core": "^2",
+        "kipchak/driver-memcached": "^1",
+        "kipchak/driver-filecache": "^1",
+        "kipchak/driver-logger": "^1"
     }
 }

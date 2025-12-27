@@ -1,81 +1,118 @@
-# CouchDB Driver for Kipchak
+# Doctrine Driver for Kipchak
 
-This driver is based on the [PHP CouchDB library](https://1x.ax/mamluk/couchdb) from [Mamluk](https://mamluk.net).
+This driver is based on Symfony's Doctrine DBAL and ORM components (v4).
 
-It is used to interact with CouchDB databases.
+It is used to interact with MySQL, PGSQL and Oracle databases and supports multiple connections.
 
 #### Composer Package 
 
 `kipchak/driver-doctrine`
 
-#### Driver Name
-
-`database.couchdb.__connection_name__`
-
 #### Sample Config File:
 
-This config file should be placed in your Kipchak project's config directory, as in the starter 
-project at https://1x.ax/mamluk/kipchak/starter/~files/master/config and **must be named `kipchak.couchdb.php`**.
+This config file should be placed in your Kipchak project's config directory, as in the starter
+project at https://1x.ax/mamluk/kipchak/starter/~files/master/config/kipchak.doctrine.php.
+
+The config file should look like this (also avalable in sample.config.php):
 
 ```
 <?php
 
-use function Mamluk\Kipchak\env;
+use function Kipchak\Core\env;
 
-return [
-    'enabled' => true,
-    'connections' => [
-        'default' => [
-            'host' => env('COUCHDB_HOST', 'http://couchdb'), # No trailing slash, please.
-            'port' => getenv('COUCHDB_PORT') !== false ? (int) getenv('COUCHDB_PORT') : null,
-            'username' => env('COUCHDB_USER', 'api'),
-            'password' => env('COUCHDB_PASSWORD', 'api'),
-            'database' => env('COUCHDB_DATABASE', 'api_database')
-        ],
-        // Add more connections here if you want to connect to multiple databases or servers.
-        'another_connection' => [
-            'host' => 'http://anothercouchdb',
-            'port' => 5984,
-            'username' => 'another_api',
-            'password' => '',
-            'database' => 'another_api_database'
+return
+[
+    'dbal' => [
+        'enabled' => false,
+        'connections' => [
+            // https://www.doctrine-project.org/projects/doctrine-dbal/en/current/reference/configuration.html
+                'primary' => [
+                    'dbname' => 'mydb',
+                    'user' => env('DB_USER', 'api'),
+                    'password' =>  env('DB_PASSWORD', 'api'),
+                    'host' => env('DB_HOST', 'mysql'),
+                    'port' => env('DB_PORT', 3306),
+                    'driver' => 'pdo_mysql',
+                    'charset' => 'utf8'
+                ]
+            ]
+    ],
+
+    'orm' => [
+        'enabled' => false,
+        'entity_managers' => [
+            'primary' => [
+                // Enables or disables Doctrine metadata caching
+                // for either performance or convenience during development.
+                'dev_mode' => (bool) env('DEBUG', true),
+
+                // List of paths where Doctrine will search for metadata.
+                // Metadata can be either YML/XML files or PHP classes annotated
+                // with comments or PHP8 attributes (effectively Doctrine's database entities)
+                'metadata_dirs' => [
+                    realpath(__DIR__ . '/../api/Entities/Doctrine/Primary')
+                ],
+                'metadata_format' => 'attributes', // attributes or annotations. Annotations are no longer supported > 1.0.
+                'connection' => 'primary', // Name of connection from 'dbal' above to use for the ORM
+                'cache' => [
+                    'enabled' => true, // Kipchak will only look at this if dev_mode = false
+                    'store' => 'memcached', // file or memcached.
+                ],
+                'cache_config' => [
+                    'memcached' => [
+                        // Pool where Doctrine will cache the processed metadata when 'dev_mode' is false
+                        'pool' => 'cache'
+                    ],
+                    'file' => [
+                        // Path where Doctrine will cache the processed metadata when 'dev_mode' is false
+                        'dir' => '/tmp',
+                    ]
+                ],
+                // This will make sure Doctrine ORM does not manage tables beginning with mamluk_
+                'schema_filter_expression' => '"~^(?!mamluk_)~"'
+            ],
         ]
     ]
 ];
+
 ```
 
 ## How to use it?
 
-Install it via composer: `composer require kipchak/driver-couchdb`.
-
-The dependency name of this driver is `database.couchdb.__connection_name__`.
+Install it via composer: `composer require kipchak/driver-doctrine`.
 
 ### Example Usage
 
+```php
+// Load the HTTP driver.
+$entityManager = \Mamluk\Kipchak\Driver\Doctrine\Doctrine::get('entitymanager.primary'); // entitymanager.primary is a reference to the primary entity manager defined in the config file.
+// Use the $entityManager client as normal.
 ```
-$cdb = $this->container->get('database.couchdb.default');
-// Use the CouchDB ($cdb) client as you normally would.
-```
-See the methods available in the client here: https://1x.ax/mamluk/couchdb/~files/master/src/Database/Client.php
+
+You can also use the doctrine cli baked into the starter project at https://1x.ax/mamluk/kipchak/starter. If you have created
+your project from the starter project, simply run `php bin/doctrine` to access the CLI after making sure you have installed the
+driver via composer and enabeld it in the config file.
 
 ## What is a Kipchak Driver?
 
-Kipchak Drivers are used to connect Kipchak to various data sources or storage systems. 
+Kipchak Drivers are used to connect Kipchak to various data sources or storage systems.
 
-They provide a standardized interface for interacting with different data sources, allowing developers to 
+They provide a standardized interface for interacting with different data sources, allowing developers to
 focus on building their applications rather than dealing with the complexities of each data source.
 
 Drivers were introduced as a part of the Kipchak 2.0 release.
 
-Drivers are basically Slim Dependencies injected into Kipchak's Service Container.
+Drivers are basically Container Dependencies injected into Kipchak's Service Container.
 
 ## How do Kipchak Drivers work?
 
-Kipchak drivers are wired into the Service Container via a config file.
+Some Kipchak drivers are wired into the Service Container via a config file (where required).
 
-Each driver has a pre-defined dependency name which may be sufficed with a config property, for instance, in the case 
+If applicable, you will find a sample config file in this repository as well as in the starter project at https://1x.ax/mamluk/kipchak/starter.
+
+Each driver defines an implementation of Kipchak's Driver Interface. Where applicable, the dependency may
+accept a parameter for a specific instance of the driver specified as a config property, for instance, in the case
 of multiple database connections or S3 buckets.
 
-So you may access the driver by invoking `$this->container->get('database.couchdb.default'), where 
-`database.couchdb.` is the name of the driver and the `default` is the name of the connection specifiedin the config file.
-
+So you may access the driver by invoking \Mamluk\Kipchak\Driver\Memcached\Memcached::get('cache'), where
+`cache` is the name of one of the memcached connection pools specified in the config file.

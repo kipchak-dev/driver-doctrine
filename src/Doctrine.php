@@ -113,7 +113,7 @@ class Doctrine implements Interfaces\Driver
      */
     public static function get(?string $configKey = null): EntityManager|Connection
     {
-        return self::$container->get('drivers.database.doctrine.' . $configKey ?? 'entitymanager.private');
+        return self::$container->get('drivers.database.doctrine.' . $configKey ?? 'entitymanager.primary');
     }
 
 }
