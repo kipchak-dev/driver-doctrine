@@ -85,7 +85,7 @@ Install it via composer: `composer require kipchak/driver-doctrine`.
 
 ```php
 // Load the HTTP driver.
-$entityManager = \Mamluk\Kipchak\Driver\Doctrine\Doctrine::get('entitymanager.primary'); // entitymanager.primary is a reference to the primary entity manager defined in the config file.
+$entityManager = Kipchak\Driver\Doctrine\Doctrine::get('entitymanager.primary'); // entitymanager.primary is a reference to the primary entity manager defined in the config file.
 // Use the $entityManager client as normal.
 ```
 
