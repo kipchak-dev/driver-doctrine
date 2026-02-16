@@ -1,7 +1,19 @@
 #!/usr/bin/env php
 <?php
 
-require_once (realpath(__DIR__ . '/../vendor/autoload.php'));
+// Composer bin proxies (vendor/bin/*) may inject this variable for package binaries.
+if (isset($_composer_autoload_path) && is_string($_composer_autoload_path) && file_exists($_composer_autoload_path)) {
+    require_once $_composer_autoload_path;
+} elseif (file_exists(__DIR__ . '/../../../autoload.php')) {
+    // Installed package path: vendor/kipchak/driver-doctrine/bin/doctrine
+    require_once __DIR__ . '/../../../autoload.php';
+} elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    // Local development path in this package repository.
+    require_once __DIR__ . '/../vendor/autoload.php';
+} else {
+    fwrite(STDERR, "Unable to locate Composer autoload.php.\n");
+    exit(1);
+}
 
 use Doctrine\ORM\Tools\Console\ConsoleRunner;
 use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
