@@ -1,0 +1,58 @@
+#!/usr/bin/env php
+<?php
+
+require_once (realpath(__DIR__ . '/../vendor/autoload.php'));
+
+use Doctrine\ORM\Tools\Console\ConsoleRunner;
+use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
+use Kipchak\Core\Api;
+use Psr\Container\ContainerInterface;
+use Kipchak\Driver\Config\Config;
+use Kipchak\Driver\Doctrine\Doctrine;
+use Kipchak\Driver\Doctrine\Commands\MigrationsDownCommand;
+use Kipchak\Driver\Doctrine\Commands\MigrationsUpCommand;
+
+$app = Api::bootCli();
+
+/**
+ * @var ContainerInterface $container
+ */
+$container = $app->getContainer();
+
+$ems = Config::get('kipchak.doctrine')['orm']['entity_managers'];
+$emOption = null;
+for ($i = 0; $i < count($argv); $i++) {
+    $arg = $argv[$i];
+    if (str_starts_with($arg, '--em=')) {
+        $emOption = substr($arg, 5);
+        break;
+    }
+    if ($arg === '--em' && isset($argv[$i + 1])) {
+        $emOption = $argv[$i + 1];
+        break;
+    }
+}
+if ($emOption !== null) {
+    if (!array_key_exists($emOption, $ems)) {
+        fwrite(STDERR, "Unknown entity manager: {$emOption}\n");
+        exit(1);
+    }
+    $ems = [$emOption => $ems[$emOption]];
+}
+
+foreach ($ems as $name => $em) {
+    $provider = new SingleManagerProvider(Doctrine::get('entitymanager.' . $name), $name);
+    $commands = [
+        // If you want to add your own custom console commands,
+        // you can do so here.
+        new MigrationsUpCommand($provider),
+        new MigrationsDownCommand($provider),
+    ];
+    ConsoleRunner::run(
+        $provider,
+        $commands
+    );
+}
+
+// Now entity managers can be run on the CLI via:
+// php vendor/bin/doctrine orm:info --em primary (primary here being defined in kipchak.doctrine as an entity_manager in the orm section

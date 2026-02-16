@@ -21,6 +21,9 @@
             "Kipchak\\Driver\\Doctrine\\": "src/"
         }
     },
+    "bin": [
+        "bin/doctrine"
+    ],
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
