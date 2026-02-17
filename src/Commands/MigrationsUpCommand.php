@@ -31,17 +31,13 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $root = realpath(__DIR__ . '/../../');
-        if ($root === false) {
-            $output->writeln('<error>Unable to resolve api root directory.</error>');
+        $root = $this->resolveProjectRoot();
+        if ($root === null) {
+            $output->writeln('<error>Unable to resolve project root directory.</error>');
             return Command::FAILURE;
         }
 
         $migrationsDir = $root . '/migrations/database';
-        if (!is_dir($migrationsDir)) {
-            $output->writeln("<error>Migrations directory not found: {$migrationsDir}</error>");
-            return Command::FAILURE;
-        }
 
         $em = $this->getEntityManager($input);
         if (!$em instanceof EntityManagerInterface) {
@@ -55,20 +51,30 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
         );
 
         $fileOption = $input->getOption('file');
-        if ($fileOption) {
+        if (is_string($fileOption) && trim($fileOption) !== '') {
+            $fileOption = trim($fileOption);
+            $cwd = getcwd() ?: $root;
             if (is_dir($fileOption)) {
                 $files = $this->collectSqlFiles($fileOption);
             } elseif (is_file($fileOption)) {
                 $files = [$fileOption];
+            } elseif (is_dir($cwd . '/' . $fileOption)) {
+                $files = $this->collectSqlFiles($cwd . '/' . trim($fileOption, '/'));
+            } elseif (is_file($cwd . '/' . $fileOption)) {
+                $files = [$cwd . '/' . ltrim($fileOption, '/')];
             } elseif (is_dir($migrationsDir . '/' . $fileOption)) {
                 $files = $this->collectSqlFiles($migrationsDir . '/' . trim($fileOption, '/'));
             } elseif (is_file($migrationsDir . '/' . $fileOption)) {
-                $files = [$migrationsDir . '/' . $fileOption];
+                $files = [$migrationsDir . '/' . ltrim($fileOption, '/')];
             } else {
                 $output->writeln("<error>Migration not found: {$fileOption}</error>");
                 return Command::FAILURE;
             }
         } else {
+            if (!is_dir($migrationsDir)) {
+                $output->writeln("<error>Migrations directory not found: {$migrationsDir}</error>");
+                return Command::FAILURE;
+            }
             $files = $this->collectSqlFiles($migrationsDir);
         }
         $this->sortByTimestampFilename($files);
@@ -144,5 +150,30 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
             }
             return strcmp($nameA, $nameB);
         });
+    }
+
+    private function resolveProjectRoot(): ?string
+    {
+        $cwd = getcwd();
+        if (!is_string($cwd) || $cwd === '') {
+            return null;
+        }
+
+        $directory = realpath($cwd);
+        if ($directory === false) {
+            return null;
+        }
+
+        while (true) {
+            if (is_file($directory . '/composer.json')) {
+                return $directory;
+            }
+
+            $parent = dirname($directory);
+            if ($parent === $directory) {
+                return realpath($cwd) ?: null;
+            }
+            $directory = $parent;
+        }
     }
 }
