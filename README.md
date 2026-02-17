@@ -93,6 +93,27 @@ You can also use the doctrine cli baked into the starter project at https://1x.a
 your project from the starter project, simply run `php bin/doctrine` to access the CLI after making sure you have installed the
 driver via composer and enabeld it in the config file.
 
+### Migrations CLI
+
+By default, migrations are loaded from your project path:
+
+`<your-project-root>/migrations/database`
+
+This path is resolved from the consuming project (the app that installs this package), not from `vendor/kipchak/driver-doctrine`.
+
+`migrations:up` supports `--file` as:
+
+- A single SQL file path (absolute or relative to current working directory)
+- A directory path (runs all `.sql` files recursively)
+- A file or directory relative to `<your-project-root>/migrations/database`
+
+`migrations:down` supports `--file` as:
+
+- A single SQL file path (absolute or relative to current working directory)
+- A file relative to `<your-project-root>/migrations/database`
+
+`migrations:down --file=<directory>` is not supported. If `--file` is omitted, it reverts the latest applied migration.
+
 ## What is a Kipchak Driver?
 
 Kipchak Drivers are used to connect Kipchak to various data sources or storage systems.
