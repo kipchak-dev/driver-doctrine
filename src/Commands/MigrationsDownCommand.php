@@ -111,7 +111,9 @@ class MigrationsDownCommand extends AbstractEntityManagerCommand
                 }
             }
             $conn->executeStatement('DELETE FROM schema_migrations WHERE filename = ?', [$filename]);
-            $conn->commit();
+            if ($conn->isTransactionActive()) {
+                $conn->commit();
+            }
             $output->writeln("Reverted {$filename}");
         } catch (\Throwable $e) {
             if ($conn->isTransactionActive()) {

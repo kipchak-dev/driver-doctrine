@@ -113,7 +113,9 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
                     'INSERT INTO schema_migrations (filename, applied_at) VALUES (?, NOW())',
                     [$filename]
                 );
-                $conn->commit();
+                if ($conn->isTransactionActive()) {
+                    $conn->commit();
+                }
                 $output->writeln("Applied {$filename}");
             } catch (\Throwable $e) {
                 if ($conn->isTransactionActive()) {
