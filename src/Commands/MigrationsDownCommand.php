@@ -98,25 +98,31 @@ class MigrationsDownCommand extends AbstractEntityManagerCommand
             }
         }
         $statements = array_filter(array_map('trim', explode(';', implode("\n", $downSql))));
+        $useTransaction = $this->shouldUseTransaction($statements, $conn->getDatabasePlatform()->supportsDDLTransactions());
         if (count($statements) === 0) {
             $output->writeln("<error>No down migration found in {$filename}</error>");
             return Command::FAILURE;
         }
 
-        $conn->beginTransaction();
         try {
+            if ($useTransaction) {
+                $conn->beginTransaction();
+            }
             foreach ($statements as $statement) {
                 if ($statement !== '') {
+                    if ($this->isTransactionControlStatement($statement)) {
+                        continue;
+                    }
                     $conn->executeStatement($statement);
                 }
             }
             $conn->executeStatement('DELETE FROM schema_migrations WHERE filename = ?', [$filename]);
-            if ($conn->isTransactionActive()) {
+            if ($useTransaction && $conn->isTransactionActive()) {
                 $conn->commit();
             }
             $output->writeln("Reverted {$filename}");
         } catch (\Throwable $e) {
-            if ($conn->isTransactionActive()) {
+            if ($useTransaction && $conn->isTransactionActive()) {
                 try {
                     $conn->rollBack();
                 } catch (\Throwable $rollbackError) {
@@ -128,6 +134,26 @@ class MigrationsDownCommand extends AbstractEntityManagerCommand
         }
 
         return Command::SUCCESS;
+    }
+
+    private function isTransactionControlStatement(string $statement): bool
+    {
+        return preg_match('/^\s*(START\s+TRANSACTION|BEGIN|COMMIT|ROLLBACK)\b/i', $statement) === 1;
+    }
+
+    private function shouldUseTransaction(array $statements, bool $supportsDdlTransactions): bool
+    {
+        if ($supportsDdlTransactions) {
+            return true;
+        }
+
+        foreach ($statements as $statement) {
+            if (preg_match('/^\s*(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b/i', $statement) === 1) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function resolveProjectRoot(): ?string

@@ -101,11 +101,17 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
                 $upSql[] = $line;
             }
             $statements = array_filter(array_map('trim', explode(';', implode("\n", $upSql))));
+            $useTransaction = $this->shouldUseTransaction($statements, $conn->getDatabasePlatform()->supportsDDLTransactions());
 
-            $conn->beginTransaction();
             try {
+                if ($useTransaction) {
+                    $conn->beginTransaction();
+                }
                 foreach ($statements as $statement) {
                     if ($statement !== '') {
+                        if ($this->isTransactionControlStatement($statement)) {
+                            continue;
+                        }
                         $conn->executeStatement($statement);
                     }
                 }
@@ -113,12 +119,12 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
                     'INSERT INTO schema_migrations (filename, applied_at) VALUES (?, NOW())',
                     [$filename]
                 );
-                if ($conn->isTransactionActive()) {
+                if ($useTransaction && $conn->isTransactionActive()) {
                     $conn->commit();
                 }
                 $output->writeln("Applied {$filename}");
             } catch (\Throwable $e) {
-                if ($conn->isTransactionActive()) {
+                if ($useTransaction && $conn->isTransactionActive()) {
                     try {
                         $conn->rollBack();
                     } catch (\Throwable $rollbackError) {
@@ -158,6 +164,26 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
             }
             return strcmp($nameA, $nameB);
         });
+    }
+
+    private function isTransactionControlStatement(string $statement): bool
+    {
+        return preg_match('/^\s*(START\s+TRANSACTION|BEGIN|COMMIT|ROLLBACK)\b/i', $statement) === 1;
+    }
+
+    private function shouldUseTransaction(array $statements, bool $supportsDdlTransactions): bool
+    {
+        if ($supportsDdlTransactions) {
+            return true;
+        }
+
+        foreach ($statements as $statement) {
+            if (preg_match('/^\s*(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b/i', $statement) === 1) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function resolveProjectRoot(): ?string
