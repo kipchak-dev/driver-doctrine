@@ -114,7 +114,13 @@ class MigrationsDownCommand extends AbstractEntityManagerCommand
             $conn->commit();
             $output->writeln("Reverted {$filename}");
         } catch (\Throwable $e) {
-            $conn->rollBack();
+            if ($conn->isTransactionActive()) {
+                try {
+                    $conn->rollBack();
+                } catch (\Throwable $rollbackError) {
+                    // Keep original migration error as primary failure signal.
+                }
+            }
             $output->writeln("<error>Failed {$filename}: {$e->getMessage()}</error>");
             return Command::FAILURE;
         }
