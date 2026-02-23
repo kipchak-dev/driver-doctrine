@@ -958,11 +958,11 @@
         },
         {
             "name": "kipchak/driver-filecache",
-            "version": "1.6",
+            "version": "1.7",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "c630614546b645804f19f17dc4bd03cbceff1589"
+                "reference": "2181e6012db9bb616df0462a02ffcd18a01e77e7"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -987,15 +987,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-02-16T11:12:57+00:00"
+            "time": "2026-02-23T07:23:07+00:00"
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.8",
+            "version": "1.9",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "763a486f4c00a5d493be0b41df59af4b54ce3ba5"
+                "reference": "4637bd4c31a375d3528b3dff19c79fe92c3794b7"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -1021,15 +1021,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-02-16T11:18:20+00:00"
+            "time": "2026-02-23T07:22:56+00:00"
         },
         {
             "name": "kipchak/driver-memcached",
-            "version": "1.7",
+            "version": "1.8",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/memcached",
-                "reference": "a224934443e93404a614304a129239c90c9ff71c"
+                "reference": "92390c5d2f6d2714bbc098207fed560fe57945aa"
             },
             "require": {
                 "ext-memcached": "*",
@@ -1055,7 +1055,7 @@
                 "memcached",
                 "microservices"
             ],
-            "time": "2026-02-16T11:18:50+00:00"
+            "time": "2026-02-23T07:23:41+00:00"
         },
         {
             "name": "laravel/serializable-closure",
