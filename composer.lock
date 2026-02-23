@@ -926,11 +926,11 @@
         },
         {
             "name": "kipchak/driver-config",
-            "version": "1.9",
+            "version": "1.10",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/config",
-                "reference": "189b55c4d9c7b01686821663ee362e24918dc395"
+                "reference": "7031cac4f32ba925dc8f499a9d6b1f53ad15ff55"
             },
             "require": {
                 "kipchak/core": "^2"
@@ -954,7 +954,7 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-02-16T11:18:05+00:00"
+            "time": "2026-02-23T07:37:28+00:00"
         },
         {
             "name": "kipchak/driver-filecache",
