@@ -110,10 +110,18 @@ class MigrationsDownCommand extends AbstractEntityManagerCommand
             }
             foreach ($statements as $statement) {
                 if ($statement !== '') {
-                    if ($this->isTransactionControlStatement($statement)) {
+                    if ($useTransaction && $this->isTransactionControlStatement($statement)) {
                         continue;
                     }
-                    $conn->executeStatement($statement);
+                    try {
+                        $conn->executeStatement($statement);
+                    } catch (\Throwable $e) {
+                        if ($this->isGracefulFailure($e)) {
+                            $output->writeln("<comment>Warning: Skipping statement because it was already reverted: " . trim($e->getMessage()) . "</comment>");
+                            continue;
+                        }
+                        throw $e;
+                    }
                 }
             }
             $conn->executeStatement('DELETE FROM schema_migrations WHERE filename = ?', [$filename]);
@@ -136,24 +144,40 @@ class MigrationsDownCommand extends AbstractEntityManagerCommand
         return Command::SUCCESS;
     }
 
+    private function isGracefulFailure(\Throwable $e): bool
+    {
+        $message = $e->getMessage();
+        $gracefulMessages = [
+            'Duplicate column name',
+            'Table already exists',
+            'Duplicate key name',
+            'already exists',
+            'Unknown column',
+            'check that column/key exists',
+            'does not exist',
+        ];
+
+        foreach ($gracefulMessages as $gracefulMessage) {
+            if (stripos($message, $gracefulMessage) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function isTransactionControlStatement(string $statement): bool
     {
-        return preg_match('/^\s*(START\s+TRANSACTION|BEGIN|COMMIT|ROLLBACK)\b/i', $statement) === 1;
+        $normalized = preg_replace('/(--.*)|(#.*)|(\/\*.*?\*\/)/s', '', $statement);
+        if ($normalized === null) {
+            $normalized = $statement;
+        }
+        return preg_match('/^\s*(START\s+TRANSACTION|BEGIN|COMMIT|ROLLBACK)\b/i', $normalized) === 1;
     }
 
     private function shouldUseTransaction(array $statements, bool $supportsDdlTransactions): bool
     {
-        if ($supportsDdlTransactions) {
-            return true;
-        }
-
-        foreach ($statements as $statement) {
-            if (preg_match('/^\s*(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b/i', $statement) === 1) {
-                return false;
-            }
-        }
-
-        return true;
+        return $supportsDdlTransactions;
     }
 
     private function resolveProjectRoot(): ?string
