@@ -40,10 +40,6 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
         $migrationsDir = $root . '/migrations/database';
 
         $em = $this->getEntityManager($input);
-        if (!$em instanceof EntityManagerInterface) {
-            $output->writeln('<error>Unable to resolve Doctrine EntityManager.</error>');
-            return Command::FAILURE;
-        }
 
         $conn = $em->getConnection();
         $conn->executeStatement(
@@ -101,7 +97,11 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
                 $upSql[] = $line;
             }
             $statements = array_filter(array_map('trim', explode(';', implode("\n", $upSql))));
-            $useTransaction = $this->shouldUseTransaction($statements, $conn->getDatabasePlatform()->supportsDDLTransactions());
+            $platform = $conn->getDatabasePlatform();
+            $supportsDdlTransactions = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform
+                || $platform instanceof \Doctrine\DBAL\Platforms\SQLitePlatform
+                || (class_exists(\Doctrine\DBAL\Platforms\SQLServerPlatform::class) && $platform instanceof \Doctrine\DBAL\Platforms\SQLServerPlatform);
+            $useTransaction = $this->shouldUseTransaction($statements, $supportsDdlTransactions);
 
             try {
                 if ($useTransaction) {
