@@ -656,12 +656,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/orm.git",
-                "reference": "6bb30e1cee713d1a38a298e81ffb3943277b7c40"
+                "reference": "79bff0f072ef177f094812cdc2df382eb82f60ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/orm/zipball/6bb30e1cee713d1a38a298e81ffb3943277b7c40",
-                "reference": "6bb30e1cee713d1a38a298e81ffb3943277b7c40",
+                "url": "https://api.github.com/repos/doctrine/orm/zipball/79bff0f072ef177f094812cdc2df382eb82f60ba",
+                "reference": "79bff0f072ef177f094812cdc2df382eb82f60ba",
                 "shasum": ""
             },
             "require": {
@@ -736,7 +736,7 @@
                 "issues": "https://github.com/doctrine/orm/issues",
                 "source": "https://github.com/doctrine/orm/tree/4.0.x"
             },
-            "time": "2026-02-04T06:54:07+00:00"
+            "time": "2026-03-12T12:27:37+00:00"
         },
         {
             "name": "doctrine/persistence",
@@ -889,11 +889,11 @@
         },
         {
             "name": "kipchak/core",
-            "version": "2.14",
+            "version": "2.15",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/core",
-                "reference": "d379d6afec604fe7d54eb7328656714828cf5544"
+                "reference": "741762d0fa82cbb7000234bb0d093ad98324a8bc"
             },
             "require": {
                 "cuyz/valinor": "^1.17",
@@ -922,7 +922,7 @@
                 "apis",
                 "microservices"
             ],
-            "time": "2026-03-02T07:38:37+00:00"
+            "time": "2026-03-15T07:35:09+00:00"
         },
         {
             "name": "kipchak/driver-config",
@@ -958,11 +958,11 @@
         },
         {
             "name": "kipchak/driver-filecache",
-            "version": "1.8",
+            "version": "1.9",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "10c10b6a6c4a19ee22c9dc0bedbddbcb48e015df"
+                "reference": "b973285fe7914f407668933a9d1b5a7b11c79dc9"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -987,15 +987,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-03-02T07:39:10+00:00"
+            "time": "2026-03-10T08:39:16+00:00"
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.11",
+            "version": "1.12",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "f84667a2a225cb0754801c574a7658191d16141e"
+                "reference": "c2922cab1ba7f5bbab992b7a578fe909c2915f7f"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -1021,15 +1021,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-03-02T07:38:59+00:00"
+            "time": "2026-03-10T08:39:04+00:00"
         },
         {
             "name": "kipchak/driver-memcached",
-            "version": "1.10",
+            "version": "1.11",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/memcached",
-                "reference": "6121e8224c9a8d7242474aa58af28345dfe61228"
+                "reference": "f7067c8c82fb822fc45a377b23ee9847e2e762f2"
             },
             "require": {
                 "ext-memcached": "*",
@@ -1055,7 +1055,7 @@
                 "memcached",
                 "microservices"
             ],
-            "time": "2026-03-02T07:39:44+00:00"
+            "time": "2026-03-10T08:39:46+00:00"
         },
         {
             "name": "laravel/serializable-closure",
