@@ -171,16 +171,16 @@
         },
         {
             "name": "doctrine/dbal",
-            "version": "4.4.2",
+            "version": "4.4.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/dbal.git",
-                "reference": "476f7f0fa6ea4aa5364926db7fabdf6049075722"
+                "reference": "61e730f1658814821a85f2402c945f3883407dec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/476f7f0fa6ea4aa5364926db7fabdf6049075722",
-                "reference": "476f7f0fa6ea4aa5364926db7fabdf6049075722",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/61e730f1658814821a85f2402c945f3883407dec",
+                "reference": "61e730f1658814821a85f2402c945f3883407dec",
                 "shasum": ""
             },
             "require": {
@@ -257,7 +257,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/dbal/issues",
-                "source": "https://github.com/doctrine/dbal/tree/4.4.2"
+                "source": "https://github.com/doctrine/dbal/tree/4.4.3"
             },
             "funding": [
                 {
@@ -273,7 +273,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-26T12:12:19+00:00"
+            "time": "2026-03-20T08:52:12+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -889,11 +889,11 @@
         },
         {
             "name": "kipchak/core",
-            "version": "2.15",
+            "version": "2.16",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/core",
-                "reference": "741762d0fa82cbb7000234bb0d093ad98324a8bc"
+                "reference": "7f8f8bbb7ecfbed2d25eea42ef3e32279344d194"
             },
             "require": {
                 "cuyz/valinor": "^1.17",
@@ -922,7 +922,7 @@
                 "apis",
                 "microservices"
             ],
-            "time": "2026-03-15T07:35:09+00:00"
+            "time": "2026-03-31T14:14:36+00:00"
         },
         {
             "name": "kipchak/driver-config",
@@ -958,11 +958,11 @@
         },
         {
             "name": "kipchak/driver-filecache",
-            "version": "1.9",
+            "version": "1.10",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "b973285fe7914f407668933a9d1b5a7b11c79dc9"
+                "reference": "a0c507a90155c6d889b1fe598555b13c9b5aac3f"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -987,15 +987,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-03-10T08:39:16+00:00"
+            "time": "2026-03-15T07:35:40+00:00"
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.12",
+            "version": "1.13",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "c2922cab1ba7f5bbab992b7a578fe909c2915f7f"
+                "reference": "07273276a5a195a83d559c798e7599dc1bfcb634"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -1021,15 +1021,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-03-10T08:39:04+00:00"
+            "time": "2026-03-15T07:35:28+00:00"
         },
         {
             "name": "kipchak/driver-memcached",
-            "version": "1.11",
+            "version": "1.12",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/memcached",
-                "reference": "f7067c8c82fb822fc45a377b23ee9847e2e762f2"
+                "reference": "a41a85a623aafb642debd006b3fb4a8a44613f09"
             },
             "require": {
                 "ext-memcached": "*",
@@ -1055,7 +1055,7 @@
                 "memcached",
                 "microservices"
             ],
-            "time": "2026-03-10T08:39:46+00:00"
+            "time": "2026-03-15T07:36:18+00:00"
         },
         {
             "name": "laravel/serializable-closure",
