@@ -33,17 +33,21 @@ class Doctrine implements Interfaces\Driver
             $dbalConnections = $dbalConfig['connections'];
             foreach ($dbalConnections as $dbalConnectionName => $dbalConnection) {
                 self::$container->set('drivers.database.doctrine.dbal.' . $dbalConnectionName, function (ContainerInterface $c) use ($dbalConnectionName, $dbalConnection): Connection {
-                    return DriverManager::getConnection(
-                        [
-                            'dbname'    =>  $dbalConnection['dbname'],
-                            'user'      =>  $dbalConnection['user'],
-                            'password'  =>  $dbalConnection['password'],
-                            'host'      =>  $dbalConnection['host'],
-                            'driver'    =>  $dbalConnection['driver'],
-                            'port'      =>  $dbalConnection['port'],
-                            'charset'   =>  $dbalConnection['charset']
-                        ]
-                    );
+                    $params = [
+                        'dbname'    =>  $dbalConnection['dbname'],
+                        'user'      =>  $dbalConnection['user'],
+                        'password'  =>  $dbalConnection['password'],
+                        'host'      =>  $dbalConnection['host'],
+                        'driver'    =>  $dbalConnection['driver'],
+                        'port'      =>  $dbalConnection['port'],
+                        'charset'   =>  $dbalConnection['charset']
+                    ];
+
+                    if (!empty($dbalConnection['driverOptions'])) {
+                        $params['driverOptions'] = $dbalConnection['driverOptions'];
+                    }
+
+                    return DriverManager::getConnection($params);
                 });
             }
         }
