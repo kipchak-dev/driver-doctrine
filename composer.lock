@@ -928,11 +928,11 @@
         },
         {
             "name": "kipchak/driver-config",
-            "version": "1.14",
+            "version": "1.15",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/config",
-                "reference": "3c4e606c2a99e77e29f47b84f7359f4c754be215"
+                "reference": "462e1ab96356919ce9cee7773db005ae0c6fc942"
             },
             "require": {
                 "kipchak/core": "^2"
@@ -956,15 +956,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-04-16T11:42:02+00:00"
+            "time": "2026-05-07T11:10:30+00:00"
         },
         {
             "name": "kipchak/driver-filecache",
-            "version": "1.13",
+            "version": "1.14",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/filecache",
-                "reference": "bdba742947876c4b56bd9a700b5ef60eb429afdf"
+                "reference": "dfec2f0b81f5fc3b4463bef7dbb07fa37c71a544"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -989,15 +989,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-04-16T11:42:25+00:00"
+            "time": "2026-05-07T11:10:59+00:00"
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.16",
+            "version": "1.17",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "ef3959f8dbbff26780497690450e0e5e199be859"
+                "reference": "f26b866bd05a167ab82096cd6fbe966d6e1076e0"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -1023,15 +1023,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-04-16T11:42:13+00:00"
+            "time": "2026-05-07T11:10:43+00:00"
         },
         {
             "name": "kipchak/driver-memcached",
-            "version": "1.15",
+            "version": "1.16",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/memcached",
-                "reference": "16e3da5b00e6b8b231e86578fbecebd95d6d7aba"
+                "reference": "302380d4b8d41af8d4426bd50f9c19b84502e38e"
             },
             "require": {
                 "ext-memcached": "*",
@@ -1057,7 +1057,7 @@
                 "memcached",
                 "microservices"
             ],
-            "time": "2026-04-16T11:43:02+00:00"
+            "time": "2026-05-07T11:11:43+00:00"
         },
         {
             "name": "laravel/serializable-closure",
