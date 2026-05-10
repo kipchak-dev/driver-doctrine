@@ -657,17 +657,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/orm.git",
-                "reference": "78ed4cddeb3e79bb7c623861eed3bd15ca35c371"
+                "reference": "47b2ae37ddffdd080250e7cd1bee6c425b3ba921"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/orm/zipball/78ed4cddeb3e79bb7c623861eed3bd15ca35c371",
-                "reference": "78ed4cddeb3e79bb7c623861eed3bd15ca35c371",
+                "url": "https://api.github.com/repos/doctrine/orm/zipball/47b2ae37ddffdd080250e7cd1bee6c425b3ba921",
+                "reference": "47b2ae37ddffdd080250e7cd1bee6c425b3ba921",
                 "shasum": ""
             },
             "require": {
                 "composer-runtime-api": "^2",
-                "doctrine/collections": "^3",
+                "doctrine/collections": "^3.1",
                 "doctrine/dbal": "^4.2.1",
                 "doctrine/deprecations": "^1.1",
                 "doctrine/event-manager": "^2.1.1",
@@ -678,7 +678,8 @@
                 "ext-ctype": "*",
                 "php": "^8.4",
                 "psr/cache": "^1 || ^2 || ^3",
-                "symfony/console": "^5.4 || ^6.0 || ^7.0 || ^8.0"
+                "symfony/console": "^5.4 || ^6.0 || ^7.0 || ^8.0",
+                "symfony/polyfill-php86": "^1.37"
             },
             "require-dev": {
                 "doctrine/coding-standard": "^14.0",
@@ -737,7 +738,7 @@
                 "issues": "https://github.com/doctrine/orm/issues",
                 "source": "https://github.com/doctrine/orm/tree/4.0.x"
             },
-            "time": "2026-04-09T08:20:54+00:00"
+            "time": "2026-05-10T08:04:36+00:00"
         },
         {
             "name": "doctrine/persistence",
@@ -993,11 +994,11 @@
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.17",
+            "version": "1.18",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/logger",
-                "reference": "f26b866bd05a167ab82096cd6fbe966d6e1076e0"
+                "reference": "44765ac71aac013ae0ce9ac1129a1cbb3982eb15"
             },
             "require": {
                 "kipchak/core": "^2",
@@ -1023,15 +1024,15 @@
                 "http",
                 "microservices"
             ],
-            "time": "2026-05-07T11:10:43+00:00"
+            "time": "2026-05-07T14:39:33+00:00"
         },
         {
             "name": "kipchak/driver-memcached",
-            "version": "1.16",
+            "version": "1.17",
             "source": {
                 "type": "git",
                 "url": "https://1x.ax/mamluk/kipchak/drivers/memcached",
-                "reference": "302380d4b8d41af8d4426bd50f9c19b84502e38e"
+                "reference": "a19b726c5580270bc8b9c7334dfb1ba445ae9c78"
             },
             "require": {
                 "ext-memcached": "*",
@@ -1057,7 +1058,7 @@
                 "memcached",
                 "microservices"
             ],
-            "time": "2026-05-07T11:11:43+00:00"
+            "time": "2026-05-07T14:40:05+00:00"
         },
         {
             "name": "laravel/serializable-closure",
