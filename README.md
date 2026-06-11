@@ -124,21 +124,21 @@ This path is resolved from the consuming project (the app that installs this pac
 
 ## Custom DQL Functions
 
-Doctrine ORM ships a minimal DQL grammar — vendor-specific helpers such as `JSON_LENGTH`, `JSON_EXTRACT`, `REGEXP`, `MATCH … AGAINST`, `STR_TO_DATE`, and so on must be registered on the EntityManager's `Configuration` **before** the EntityManager is constructed (Doctrine locks the configuration once the EM is built).
+Doctrine ORM ships a minimal DQL grammar — vendor-specific helpers such as `REGEXP`, `MATCH … AGAINST`, `STR_TO_DATE`, `GROUP_CONCAT`, JSON helpers, and so on must be registered on the EntityManager's `Configuration` **before** the EntityManager is constructed (Doctrine locks the configuration once the EM is built).
 
 This driver exposes that registration through an optional per-entity-manager `custom_dql_functions` block in `kipchak.doctrine.php`. The block has three families, matching Doctrine's three registration methods:
 
 | Family     | Doctrine API                  | Use for                                       |
 |------------|-------------------------------|-----------------------------------------------|
-| `numeric`  | `addCustomNumericFunction()`  | functions that return a number (`JSON_LENGTH`, `BIT_COUNT`, …) |
-| `string`   | `addCustomStringFunction()`   | functions that return a string (`JSON_EXTRACT`, `GROUP_CONCAT`, `REGEXP`, …) |
-| `datetime` | `addCustomDatetimeFunction()` | functions that return a date/datetime (`STR_TO_DATE`, `DATE_FORMAT`, …) |
+| `numeric`  | `addCustomNumericFunction()`  | functions that return a number (`BIT_COUNT`, `DAY`, …)         |
+| `string`   | `addCustomStringFunction()`   | functions that return a string (`GROUP_CONCAT`, `REGEXP`, `MATCH_AGAINST`, …) |
+| `datetime` | `addCustomDatetimeFunction()` | functions that return a date/datetime (`STR_TO_DATE`, `DATE_FORMAT`, …)         |
 
 Each family maps DQL function name → fully qualified class name. The class must extend `Doctrine\ORM\Query\AST\Functions\FunctionNode`.
 
-### Example: enable a few MySQL JSON helpers
+### Example: enable a few MySQL helpers via beberlei/doctrineextensions
 
-The easiest way to get a ready-made set of function nodes is the `beberlei/doctrineextensions` package:
+The most popular ready-made bundle of function nodes is `beberlei/doctrineextensions`:
 
 ```
 composer require beberlei/doctrineextensions
@@ -149,10 +149,12 @@ Then, in your `kipchak.doctrine.php` entity-manager block:
 ```php
 'custom_dql_functions' => [
     'numeric' => [
-        'JSON_LENGTH' => \DoctrineExtensions\Query\Mysql\JsonLength::class,
+        'BIT_COUNT' => \DoctrineExtensions\Query\Mysql\BitCount::class,
     ],
     'string' => [
-        'JSON_EXTRACT' => \DoctrineExtensions\Query\Mysql\JsonExtract::class,
+        'GROUP_CONCAT'  => \DoctrineExtensions\Query\Mysql\GroupConcat::class,
+        'MATCH_AGAINST' => \DoctrineExtensions\Query\Mysql\MatchAgainst::class,
+        'REGEXP'        => \DoctrineExtensions\Query\Mysql\Regexp::class,
     ],
     'datetime' => [
         'STR_TO_DATE' => \DoctrineExtensions\Query\Mysql\StrToDate::class,
@@ -164,17 +166,62 @@ You can now use these in DQL:
 
 ```php
 $em->createQuery(
-    'SELECT c FROM App\Entities\Containers c
-     WHERE JSON_LENGTH(c.initjobs) > 0'
+    "SELECT a FROM App\Entities\Article a
+     WHERE MATCH_AGAINST(a.title, a.body, 'kipchak') > 0"
 );
 ```
+
+### JSON helpers
+
+`beberlei/doctrineextensions` does **not** ship MySQL `JSON_*` function nodes. Two clean options:
+
+1. **`scienta/doctrine-json-functions`** — a dedicated JSON-functions package covering `JSON_LENGTH`, `JSON_EXTRACT`, `JSON_CONTAINS`, etc. Register the classes the same way:
+
+   ```php
+   'custom_dql_functions' => [
+       'numeric' => [
+           'JSON_LENGTH' => \Scienta\DoctrineJsonFunctions\Query\AST\Functions\Mysql\JsonLength::class,
+       ],
+   ],
+   ```
+
+2. **Hand-roll your own.** A `FunctionNode` for a single-arg MySQL function is ~25 lines:
+
+   ```php
+   namespace App\Doctrine\DqlFunctions;
+
+   use Doctrine\ORM\Query\AST\Functions\FunctionNode;
+   use Doctrine\ORM\Query\Parser;
+   use Doctrine\ORM\Query\SqlWalker;
+   use Doctrine\ORM\Query\TokenType;
+
+   final class JsonLength extends FunctionNode
+   {
+       private $value;
+
+       public function parse(Parser $parser): void
+       {
+           $parser->match(TokenType::T_IDENTIFIER);
+           $parser->match(TokenType::T_OPEN_PARENTHESIS);
+           $this->value = $parser->StringPrimary();
+           $parser->match(TokenType::T_CLOSE_PARENTHESIS);
+       }
+
+       public function getSql(SqlWalker $sqlWalker): string
+       {
+           return 'JSON_LENGTH(' . $this->value->dispatch($sqlWalker) . ')';
+       }
+   }
+   ```
+
+   Register under the `numeric` family (`JSON_LENGTH` returns an integer).
 
 ### Notes
 
 - The block is **fully optional and additive**. Omit it entirely (or leave any family empty) and behaviour is identical to previous releases.
 - Function names are case-insensitive in DQL but Doctrine stores them upper-cased internally — prefer `JSON_LENGTH` over `json_length` for clarity.
 - Functions are registered per entity manager, so different EMs can advertise different DQL grammars.
-- You can mix vendored function nodes (e.g. `beberlei/doctrineextensions`) with your own — just point at any `FunctionNode` subclass.
+- You can mix vendored function nodes (e.g. `beberlei/doctrineextensions`, `scienta/doctrine-json-functions`) with your own — just point at any `FunctionNode` subclass.
 
 ## What is a Kipchak Driver?
 

@@ -62,18 +62,22 @@ return
                     // Optional: register custom DQL functions on this entity
                     // manager. Three families are supported (numeric, string,
                     // datetime) and map 1:1 to Doctrine's Configuration API.
-                    // The classes themselves must extend
-                    // Doctrine\ORM\Query\AST\Functions\FunctionNode. The
-                    // beberlei/doctrineextensions package ships ready-made
-                    // implementations for most MySQL JSON/REGEXP/MATCH
-                    // helpers; you can also drop in your own.
+                    // Each class must extend
+                    // Doctrine\ORM\Query\AST\Functions\FunctionNode.
+                    //
+                    // The beberlei/doctrineextensions package ships
+                    // ready-made nodes for many MySQL helpers (BIT_COUNT,
+                    // GROUP_CONCAT, MATCH_AGAINST, REGEXP, STR_TO_DATE, …).
+                    // For JSON_* helpers, use scienta/doctrine-json-functions
+                    // or roll your own — see the README for examples.
                     //
                     // 'custom_dql_functions' => [
                     //     'numeric' => [
-                    //         'JSON_LENGTH' => \DoctrineExtensions\Query\Mysql\JsonLength::class,
+                    //         'BIT_COUNT' => \DoctrineExtensions\Query\Mysql\BitCount::class,
                     //     ],
                     //     'string' => [
-                    //         'JSON_EXTRACT' => \DoctrineExtensions\Query\Mysql\JsonExtract::class,
+                    //         'GROUP_CONCAT'  => \DoctrineExtensions\Query\Mysql\GroupConcat::class,
+                    //         'MATCH_AGAINST' => \DoctrineExtensions\Query\Mysql\MatchAgainst::class,
                     //     ],
                     //     'datetime' => [
                     //         'STR_TO_DATE' => \DoctrineExtensions\Query\Mysql\StrToDate::class,
