@@ -57,7 +57,28 @@ return
                         ]
                     ],
                     // This will make sure Doctrine ORM does not manage tables beginning with mamluk_
-                    'schema_filter_expression' => '"~^(?!mamluk_)~"'
+                    'schema_filter_expression' => '"~^(?!mamluk_)~"',
+
+                    // Optional: register custom DQL functions on this entity
+                    // manager. Three families are supported (numeric, string,
+                    // datetime) and map 1:1 to Doctrine's Configuration API.
+                    // The classes themselves must extend
+                    // Doctrine\ORM\Query\AST\Functions\FunctionNode. The
+                    // beberlei/doctrineextensions package ships ready-made
+                    // implementations for most MySQL JSON/REGEXP/MATCH
+                    // helpers; you can also drop in your own.
+                    //
+                    // 'custom_dql_functions' => [
+                    //     'numeric' => [
+                    //         'JSON_LENGTH' => \DoctrineExtensions\Query\Mysql\JsonLength::class,
+                    //     ],
+                    //     'string' => [
+                    //         'JSON_EXTRACT' => \DoctrineExtensions\Query\Mysql\JsonExtract::class,
+                    //     ],
+                    //     'datetime' => [
+                    //         'STR_TO_DATE' => \DoctrineExtensions\Query\Mysql\StrToDate::class,
+                    //     ],
+                    // ],
                 ],
             ]
         ]

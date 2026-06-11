@@ -69,7 +69,15 @@ return
                     ]
                 ],
                 // This will make sure Doctrine ORM does not manage tables beginning with mamluk_
-                'schema_filter_expression' => '"~^(?!mamluk_)~"'
+                'schema_filter_expression' => '"~^(?!mamluk_)~"',
+
+                // Optional: register custom DQL functions on this entity manager.
+                // See "Custom DQL Functions" below for details.
+                // 'custom_dql_functions' => [
+                //     'numeric' => [
+                //         'JSON_LENGTH' => \DoctrineExtensions\Query\Mysql\JsonLength::class,
+                //     ],
+                // ],
             ],
         ]
     ]
@@ -113,6 +121,60 @@ This path is resolved from the consuming project (the app that installs this pac
 - A file relative to `<your-project-root>/migrations/database`
 
 `migrations:down --file=<directory>` is not supported. If `--file` is omitted, it reverts the latest applied migration.
+
+## Custom DQL Functions
+
+Doctrine ORM ships a minimal DQL grammar — vendor-specific helpers such as `JSON_LENGTH`, `JSON_EXTRACT`, `REGEXP`, `MATCH … AGAINST`, `STR_TO_DATE`, and so on must be registered on the EntityManager's `Configuration` **before** the EntityManager is constructed (Doctrine locks the configuration once the EM is built).
+
+This driver exposes that registration through an optional per-entity-manager `custom_dql_functions` block in `kipchak.doctrine.php`. The block has three families, matching Doctrine's three registration methods:
+
+| Family     | Doctrine API                  | Use for                                       |
+|------------|-------------------------------|-----------------------------------------------|
+| `numeric`  | `addCustomNumericFunction()`  | functions that return a number (`JSON_LENGTH`, `BIT_COUNT`, …) |
+| `string`   | `addCustomStringFunction()`   | functions that return a string (`JSON_EXTRACT`, `GROUP_CONCAT`, `REGEXP`, …) |
+| `datetime` | `addCustomDatetimeFunction()` | functions that return a date/datetime (`STR_TO_DATE`, `DATE_FORMAT`, …) |
+
+Each family maps DQL function name → fully qualified class name. The class must extend `Doctrine\ORM\Query\AST\Functions\FunctionNode`.
+
+### Example: enable a few MySQL JSON helpers
+
+The easiest way to get a ready-made set of function nodes is the `beberlei/doctrineextensions` package:
+
+```
+composer require beberlei/doctrineextensions
+```
+
+Then, in your `kipchak.doctrine.php` entity-manager block:
+
+```php
+'custom_dql_functions' => [
+    'numeric' => [
+        'JSON_LENGTH' => \DoctrineExtensions\Query\Mysql\JsonLength::class,
+    ],
+    'string' => [
+        'JSON_EXTRACT' => \DoctrineExtensions\Query\Mysql\JsonExtract::class,
+    ],
+    'datetime' => [
+        'STR_TO_DATE' => \DoctrineExtensions\Query\Mysql\StrToDate::class,
+    ],
+],
+```
+
+You can now use these in DQL:
+
+```php
+$em->createQuery(
+    'SELECT c FROM App\Entities\Containers c
+     WHERE JSON_LENGTH(c.initjobs) > 0'
+);
+```
+
+### Notes
+
+- The block is **fully optional and additive**. Omit it entirely (or leave any family empty) and behaviour is identical to previous releases.
+- Function names are case-insensitive in DQL but Doctrine stores them upper-cased internally — prefer `JSON_LENGTH` over `json_length` for clarity.
+- Functions are registered per entity manager, so different EMs can advertise different DQL grammars.
+- You can mix vendored function nodes (e.g. `beberlei/doctrineextensions`) with your own — just point at any `FunctionNode` subclass.
 
 ## What is a Kipchak Driver?
 

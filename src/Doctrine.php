@@ -99,6 +99,29 @@ class Doctrine implements Interfaces\Driver
                         });
                     }
 
+                    // Optional custom DQL function registration. Doctrine's
+                    // Configuration is locked once the EntityManager is built,
+                    // so any custom JSON_*, REGEXP, MATCH_AGAINST etc. that an
+                    // app wants in DQL must be registered here. Three families
+                    // map 1:1 to Doctrine's Configuration API. Absent / empty
+                    // entries are a no-op — backwards compatible with any
+                    // existing kipchak.doctrine config.
+                    if (!empty($emConnection['custom_dql_functions']['numeric']) && is_array($emConnection['custom_dql_functions']['numeric'])) {
+                        foreach ($emConnection['custom_dql_functions']['numeric'] as $name => $class) {
+                            $emConfig->addCustomNumericFunction($name, $class);
+                        }
+                    }
+                    if (!empty($emConnection['custom_dql_functions']['string']) && is_array($emConnection['custom_dql_functions']['string'])) {
+                        foreach ($emConnection['custom_dql_functions']['string'] as $name => $class) {
+                            $emConfig->addCustomStringFunction($name, $class);
+                        }
+                    }
+                    if (!empty($emConnection['custom_dql_functions']['datetime']) && is_array($emConnection['custom_dql_functions']['datetime'])) {
+                        foreach ($emConnection['custom_dql_functions']['datetime'] as $name => $class) {
+                            $emConfig->addCustomDatetimeFunction($name, $class);
+                        }
+                    }
+
                     return new EntityManager(
                         DriverManager::getConnection(
                             Config::get($configFileName)['dbal']['connections'][$emConnection['connection']]
