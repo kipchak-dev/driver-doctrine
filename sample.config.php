@@ -19,8 +19,8 @@ return
                     // Optional: PDO driver options for SSL/TLS connections.
                     // Mount the MySQL CA certificate ConfigMap and reference the path here.
                     // 'driverOptions' => [
-                    //     \PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_SSL_CA', '/etc/mysql-tls/ca.crt'),
-                    //     \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
+                    //     \Pdo\Mysql::ATTR_SSL_CA => env('MYSQL_SSL_CA', '/etc/mysql-tls/ca.crt'),
+                    //     \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT => true,
                     // ],
                 ]
             ]

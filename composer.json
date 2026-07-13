@@ -28,7 +28,7 @@
     "prefer-stable": true,
     "require": {
         "doctrine/orm": "^4",
-        "kipchak/core": "^2",
+        "kipchak/core": "^2 || ^3",
         "kipchak/driver-memcached": "^1",
         "kipchak/driver-filecache": "^1",
         "kipchak/driver-logger": "^1"
