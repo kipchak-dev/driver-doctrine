@@ -8,6 +8,7 @@ use Kipchak\Driver\Config\Config;
 use Kipchak\Driver\Logger\Logger;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Kipchak\Driver\Memcached\Memcached as MemcachedDriver;
 use Kipchak\Driver\Filecache\Filecache as FilecacheDriver;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
@@ -58,7 +59,7 @@ class Doctrine implements Interfaces\Driver
             $entityManagers = $ormConfig['entity_managers'];
             $log = Logger::get();
             foreach ($entityManagers as $emName => $emConnection) {
-                self::$container->set('drivers.database.doctrine.entitymanager.' . $emName, function (ContainerInterface $c) use ($emName, $emConnection, $log, $configFileName): EntityManager {
+                self::$container->set('drivers.database.doctrine.entitymanager.' . $emName, function (ContainerInterface $c) use ($emName, $emConnection, $log, $configFileName): EntityManagerInterface {
                     if (!is_dir($emConnection['cache_config']['file']['dir'])) {
                         $log->debug('Doctrine ORM: Creating Cache Directory '. $emConnection['cache_config']['file']['dir'] . '.');
                         mkdir ($emConnection['cache_config']['file']['dir'], 0777, true);
@@ -122,13 +123,30 @@ class Doctrine implements Interfaces\Driver
                         }
                     }
 
-                    return new EntityManager(
+                    $em = new EntityManager(
                         DriverManager::getConnection(
                             Config::get($configFileName)['dbal']['connections'][$emConnection['connection']]
                         )
                         , $emConfig
                     );
 
+                    // Opt-in resilience for long-running worker runtimes
+                    // (FrankenPHP worker mode, RoadRunner, Swoole, ...): Doctrine
+                    // permanently closes an EntityManager when an exception
+                    // escapes a unit of work, and in a persistent worker every
+                    // later request then fails with "The EntityManager is
+                    // closed." until the process recycles. With
+                    // `'reopenable' => true` on the entity manager config the EM
+                    // is wrapped in a ReopenableEntityManager decorator — call
+                    // `$em->reopenIfClosed()` at the top of each request to swap
+                    // a fresh inner EntityManager in over the same connection
+                    // and configuration. Off by default: existing configs keep
+                    // receiving the bare EntityManager instance.
+                    if (!empty($emConnection['reopenable'])) {
+                        return new ReopenableEntityManager($em);
+                    }
+
+                    return $em;
                 });
             }
         }
@@ -137,8 +155,12 @@ class Doctrine implements Interfaces\Driver
     /**
      * Get a Doctrine Entity Manager or DBAL Connection
      * The config key in this case needs to be entitymanager.name or dbal.name
+     *
+     * Entity managers configured with `'reopenable' => true` are returned as a
+     * ReopenableEntityManager (an EntityManagerInterface decorator); all others
+     * remain plain EntityManager instances.
      */
-    public static function get(?string $configKey = null): EntityManager|Connection
+    public static function get(?string $configKey = null): EntityManagerInterface|Connection
     {
         return self::$container->get('drivers.database.doctrine.' . $configKey ?? 'entitymanager.primary');
     }

@@ -122,6 +122,56 @@ This path is resolved from the consuming project (the app that installs this pac
 
 `migrations:down --file=<directory>` is not supported. If `--file` is omitted, it reverts the latest applied migration.
 
+## Reopenable Entity Managers (long-running workers)
+
+In long-running worker runtimes (FrankenPHP worker mode, RoadRunner, Swoole, ...)
+a single EntityManager serves many requests. Doctrine permanently **closes** an
+EntityManager whenever an exception escapes a unit of work — a failed `flush()`,
+an integrity-constraint violation, a deadlock. A closed EntityManager cannot be
+reopened, so every service still holding a reference to it fails with
+`The EntityManager is closed.` on all subsequent requests until the worker
+process recycles. Replacing the container entry does not help: services
+constructed earlier keep their captured reference.
+
+Opt in per entity manager in the config:
+
+```php
+'entity_managers' => [
+    'primary' => [
+        // ...
+        'reopenable' => true,
+    ],
+],
+```
+
+`Doctrine::get('entitymanager.primary')` then returns a
+`Kipchak\Driver\Doctrine\ReopenableEntityManager` — a
+`Doctrine\ORM\Decorator\EntityManagerDecorator` that delegates every call to an
+inner EntityManager it can replace. Because all your services hold the (stable)
+decorator, swapping the inner instance heals every holder at once. Call this at
+the top of each request in your worker loop:
+
+```php
+$em = Doctrine::get('entitymanager.primary');
+if ($em instanceof Kipchak\Driver\Doctrine\ReopenableEntityManager) {
+    $em->reopenIfClosed();
+}
+```
+
+`reopenIfClosed()` is a no-op while the inner EntityManager is open. When it has
+been closed, the decorator:
+
+- rolls back any transaction the failure left dangling on the connection (or
+  closes the connection if the socket is dead — DBAL lazily reconnects);
+- builds a fresh EntityManager over the same connection and configuration (or
+  via a custom factory passed to the constructor);
+- carries the **enabled query filters and their parameters** over to the fresh
+  instance, so e.g. a soft-delete filter does not silently switch off.
+
+The flag is off by default; existing configurations keep receiving a plain
+`EntityManager`. If you enable it, type-hint your services against
+`Doctrine\ORM\EntityManagerInterface` rather than the concrete `EntityManager`.
+
 ## Custom DQL Functions
 
 Doctrine ORM ships a minimal DQL grammar — vendor-specific helpers such as `REGEXP`, `MATCH … AGAINST`, `STR_TO_DATE`, `GROUP_CONCAT`, JSON helpers, and so on must be registered on the EntityManager's `Configuration` **before** the EntityManager is constructed (Doctrine locks the configuration once the EM is built).

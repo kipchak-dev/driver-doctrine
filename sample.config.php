@@ -59,6 +59,20 @@ return
                     // This will make sure Doctrine ORM does not manage tables beginning with mamluk_
                     'schema_filter_expression' => '"~^(?!mamluk_)~"',
 
+                    // Optional (default false): wrap this entity manager in a
+                    // ReopenableEntityManager decorator. Recommended for
+                    // long-running worker runtimes (FrankenPHP worker mode,
+                    // RoadRunner, Swoole) where one EntityManager serves many
+                    // requests: Doctrine permanently closes an EM when an
+                    // exception escapes a unit of work, and every service still
+                    // holding it then fails with "The EntityManager is closed."
+                    // until the worker recycles. With this enabled, call
+                    // Doctrine::get('entitymanager.primary')->reopenIfClosed()
+                    // at the top of each request to swap in a fresh inner EM
+                    // over the same connection and configuration. Enabled query
+                    // filters and their parameters are carried across the swap.
+                    // 'reopenable' => true,
+
                     // Optional: register custom DQL functions on this entity
                     // manager. Three families are supported (numeric, string,
                     // datetime) and map 1:1 to Doctrine's Configuration API.
