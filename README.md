@@ -122,6 +122,21 @@ This path is resolved from the consuming project (the app that installs this pac
 
 `migrations:down --file=<directory>` is not supported. If `--file` is omitted, it reverts the latest applied migration.
 
+## DBAL middleware
+
+From 1.51, DBAL driver middleware registered with `Kipchak\Driver\Doctrine\Library\Middleware::push()` applies to
+every connection the driver creates, its DBAL connections and those of its entity managers. It is read when each
+connection is created, on first use, so it can be registered after the driver is initialised. The OpenTelemetry
+driver uses it to trace queries. Nothing changes until something is registered.
+
+```php
+use Doctrine\DBAL\Driver\Middleware as DriverMiddleware;
+use Kipchak\Driver\Doctrine\Library\Middleware;
+
+// A DBAL middleware, or a callable that receives the connection's name and returns one.
+Middleware::push('query-log', fn (string $connection): DriverMiddleware => new QueryLog($connection));
+```
+
 ## Reopenable Entity Managers (long-running workers)
 
 In long-running worker runtimes (FrankenPHP worker mode, RoadRunner, Swoole, ...)

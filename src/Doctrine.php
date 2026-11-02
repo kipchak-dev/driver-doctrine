@@ -14,6 +14,7 @@ use Kipchak\Driver\Filecache\Filecache as FilecacheDriver;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\DBAL\Connection;
+use Kipchak\Driver\Doctrine\Library\Middleware;
 
 class Doctrine implements Interfaces\Driver
 {
@@ -48,7 +49,7 @@ class Doctrine implements Interfaces\Driver
                         $params['driverOptions'] = $dbalConnection['driverOptions'];
                     }
 
-                    return DriverManager::getConnection($params);
+                    return DriverManager::getConnection($params, Middleware::configuration($dbalConnectionName));
                 });
             }
         }
@@ -125,7 +126,8 @@ class Doctrine implements Interfaces\Driver
 
                     $em = new EntityManager(
                         DriverManager::getConnection(
-                            Config::get($configFileName)['dbal']['connections'][$emConnection['connection']]
+                            Config::get($configFileName)['dbal']['connections'][$emConnection['connection']],
+                            Middleware::configuration($emConnection['connection'])
                         )
                         , $emConfig
                     );
