@@ -40,5 +40,21 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^12"
+    },
+    "extra": {
+        "kipchak": {
+            "type": "driver",
+            "config": "sample.config.php",
+            "configName": "kipchak.doctrine.php",
+            "initialise": "\\Kipchak\\Driver\\Doctrine\\Doctrine::initialise($container);",
+            "after": [
+                "kipchak/driver-config",
+                "kipchak/driver-logger",
+                "kipchak/driver-filecache",
+                "kipchak/driver-memcached"
+            ],
+            "before": [],
+            "docs": "https://kipchak.dev/docs/driver-doctrine"
+        }
     }
 }
