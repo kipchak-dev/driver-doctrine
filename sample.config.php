@@ -22,7 +22,12 @@ return
                     //     \Pdo\Mysql::ATTR_SSL_CA => env('MYSQL_SSL_CA', '/etc/mysql-tls/ca.crt'),
                     //     \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT => true,
                     // ],
-                ]
+                ],
+                // SQLite: a file at 'path', or 'memory' => true for an in-memory database.
+                // 'local' => [
+                //     'driver' => 'pdo_sqlite',
+                //     'path' => env('SQLITE_PATH', '/data/app.db'),
+                // ],
             ]
         ],
 

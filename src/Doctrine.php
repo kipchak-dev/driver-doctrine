@@ -26,6 +26,28 @@ class Doctrine implements Interfaces\Driver
         self::set($configFileName);
     }
 
+    /**
+     * The DBAL connection parameters from a connection's configuration: each supported key that is set. A server
+     * database uses host, port, dbname, user and password; SQLite uses path (a file) or memory (true).
+     *
+     * @param array<string, mixed> $connection
+     * @return array<string, mixed>
+     */
+    public static function dbalParams(array $connection): array
+    {
+        $params = [];
+        foreach (['driver', 'dbname', 'user', 'password', 'host', 'port', 'unix_socket', 'charset', 'path', 'memory'] as $key) {
+            if (array_key_exists($key, $connection)) {
+                $params[$key] = $connection[$key];
+            }
+        }
+        if (!empty($connection['driverOptions'])) {
+            $params['driverOptions'] = $connection['driverOptions'];
+        }
+
+        return $params;
+    }
+
     public static function set(?string $configFileName = null): void
     {
         $configFileName = $configFileName ?? 'kipchak.doctrine';
@@ -35,21 +57,7 @@ class Doctrine implements Interfaces\Driver
             $dbalConnections = $dbalConfig['connections'];
             foreach ($dbalConnections as $dbalConnectionName => $dbalConnection) {
                 self::$container->set('drivers.database.doctrine.dbal.' . $dbalConnectionName, function (ContainerInterface $c) use ($dbalConnectionName, $dbalConnection): Connection {
-                    $params = [
-                        'dbname'    =>  $dbalConnection['dbname'],
-                        'user'      =>  $dbalConnection['user'],
-                        'password'  =>  $dbalConnection['password'],
-                        'host'      =>  $dbalConnection['host'],
-                        'driver'    =>  $dbalConnection['driver'],
-                        'port'      =>  $dbalConnection['port'],
-                        'charset'   =>  $dbalConnection['charset']
-                    ];
-
-                    if (!empty($dbalConnection['driverOptions'])) {
-                        $params['driverOptions'] = $dbalConnection['driverOptions'];
-                    }
-
-                    return DriverManager::getConnection($params, Middleware::configuration($dbalConnectionName));
+                    return DriverManager::getConnection(self::dbalParams($dbalConnection), Middleware::configuration($dbalConnectionName));
                 });
             }
         }
