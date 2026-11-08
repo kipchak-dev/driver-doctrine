@@ -52,7 +52,8 @@ class MigrationsDownCommand extends AbstractEntityManagerCommand
                 $output->writeln("<error>Migrations directory not found: {$migrationsDir}</error>");
                 return Command::FAILURE;
             }
-            $filename = $conn->fetchOne('SELECT filename FROM schema_migrations ORDER BY applied_at DESC LIMIT 1');
+            // Files are applied in filename order, so within the same second the later filename was applied last.
+            $filename = $conn->fetchOne('SELECT filename FROM schema_migrations ORDER BY applied_at DESC, filename DESC LIMIT 1');
             $file = $filename ? $migrationsDir . '/' . $filename : null;
         } else {
             $fileOption = trim($fileOption);

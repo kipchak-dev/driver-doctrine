@@ -123,9 +123,10 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
                         }
                     }
                 }
+                // The time is bound rather than NOW(), which SQLite does not have.
                 $conn->executeStatement(
-                    'INSERT INTO schema_migrations (filename, applied_at) VALUES (?, NOW())',
-                    [$filename]
+                    'INSERT INTO schema_migrations (filename, applied_at) VALUES (?, ?)',
+                    [$filename, gmdate('Y-m-d H:i:s')]
                 );
                 if ($useTransaction && $conn->isTransactionActive()) {
                     $conn->commit();

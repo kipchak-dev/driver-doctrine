@@ -8,6 +8,29 @@ It is used to interact with MySQL, PGSQL and Oracle databases and supports multi
 
 `kipchak/driver-doctrine`
 
+#### Installation: doctrine/orm 4 is not yet a stable release
+
+This driver uses doctrine/orm 4, which Doctrine has not released as a stable version: Packagist offers the
+`4.0.x-dev` branch, and its newest stable release is 3.7. A project that accepts only stable packages, as the starter
+does, therefore needs to allow that one package to be a development version. Kipchak CLI 1.2.1 and later do this for you:
+
+```bash
+vendor/bin/kipchak add doctrine
+```
+
+adds `"doctrine/orm": "^4@dev"` to your `composer.json` beside the driver, so that every other package stays stable.
+Without the CLI, run:
+
+```bash
+composer require kipchak/driver-doctrine "doctrine/orm:^4@dev"
+```
+
+The `4.0.x-dev` branch moves with every `composer update doctrine/orm`; see "Maintaining this driver" below for how each
+release of this driver is tested against it. ORM 4 also changes some APIs: `QueryBuilder::orderBy()` takes PHP 8.6's
+`SortDirection` enum (`\SortDirection::Ascending`, polyfilled by `symfony/polyfill-php86`), not the string `'ASC'`.
+When Doctrine releases ORM 4.0.0, change the constraint to `"doctrine/orm": "^4"`: Composer ranks `4.0.x-dev` above
+`4.0.0`, so `^4@dev` would keep the development branch.
+
 #### Sample Config File:
 
 This config file should be placed in your Kipchak project's config directory, as in the starter
@@ -121,6 +144,10 @@ This path is resolved from the consuming project (the app that installs this pac
 - A file relative to `<your-project-root>/migrations/database`
 
 `migrations:down --file=<directory>` is not supported. If `--file` is omitted, it reverts the latest applied migration.
+
+Each SQL file holds its up statements, then a line `-- Down` and the statements that undo them. Migrations are recorded
+in the `schema_migrations` table; on PostgreSQL, SQLite and SQL Server each file runs in one transaction. They work on
+SQLite from 1.54: earlier releases recorded each migration with `NOW()`, which SQLite does not have, and failed.
 
 ## DBAL middleware
 
@@ -287,6 +314,18 @@ $em->createQuery(
 - Function names are case-insensitive in DQL but Doctrine stores them upper-cased internally — prefer `JSON_LENGTH` over `json_length` for clarity.
 - Functions are registered per entity manager, so different EMs can advertise different DQL grammars.
 - You can mix vendored function nodes (e.g. `beberlei/doctrineextensions`, `scienta/doctrine-json-functions`) with your own — just point at any `FunctionNode` subclass.
+
+## Maintaining this driver
+
+doctrine/orm 4 is unreleased and its `4.0.x-dev` branch moves, so every release of this driver follows two rules:
+
+1. **It is tested against the exact doctrine/orm 4.0.x-dev commit in `composer.lock`.** The suite covers entity mapping,
+   the repository, DQL and the QueryBuilder, custom DQL functions, migrations up and down, and worker-mode
+   EntityManager reset (`ReopenableEntityManager`). Each test has a negative control that shows it fails without what
+   it checks.
+2. **Whenever the lock moves to a newer 4.0.x-dev commit, Doctrine's changes between the two commits are read**: its
+   `UPGRADE.md`, the changelog and the commit log, for breaking changes. The release note records the commit range and
+   each change that affects the driver, or says that none does.
 
 ## What is a Kipchak Driver?
 
