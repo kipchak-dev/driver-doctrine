@@ -15,6 +15,7 @@ use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\DBAL\Connection;
 use Kipchak\Driver\Doctrine\Library\Middleware;
+use RuntimeException;
 
 class Doctrine implements Interfaces\Driver
 {
@@ -48,6 +49,29 @@ class Doctrine implements Interfaces\Driver
         return $params;
     }
 
+    /**
+     * kipchak/driver-memcached is optional. An entity manager configured to cache in Memcached without it fails when the
+     * API boots, in development as in production, rather than on the first request that uses the entity manager.
+     *
+     * @param array<string, mixed> $entityManager
+     * @throws RuntimeException when the entity manager caches in Memcached and the driver is not installed
+     */
+    public static function requireMemcachedDriver(string $name, array $entityManager, ?bool $installed = null): void
+    {
+        $cache = $entityManager['cache'] ?? [];
+        if (empty($cache['enabled']) || ($cache['store'] ?? null) !== 'memcached') {
+            return;
+        }
+        if ($installed ?? class_exists(MemcachedDriver::class)) {
+            return;
+        }
+
+        throw new RuntimeException(
+            "Doctrine entity manager '{$name}' has its cache store set to 'memcached', but kipchak/driver-memcached is not installed. "
+            . "Run: composer require kipchak/driver-memcached. Or set the store to 'file' in the Doctrine configuration."
+        );
+    }
+
     public static function set(?string $configFileName = null): void
     {
         $configFileName = $configFileName ?? 'kipchak.doctrine';
@@ -68,6 +92,7 @@ class Doctrine implements Interfaces\Driver
             $entityManagers = $ormConfig['entity_managers'];
             $log = Logger::get();
             foreach ($entityManagers as $emName => $emConnection) {
+                self::requireMemcachedDriver($emName, $emConnection);
                 self::$container->set('drivers.database.doctrine.entitymanager.' . $emName, function (ContainerInterface $c) use ($emName, $emConnection, $log, $configFileName): EntityManagerInterface {
                     if (!is_dir($emConnection['cache_config']['file']['dir'])) {
                         $log->debug('Doctrine ORM: Creating Cache Directory '. $emConnection['cache_config']['file']['dir'] . '.');
