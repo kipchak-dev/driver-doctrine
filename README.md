@@ -33,8 +33,8 @@ When Doctrine releases ORM 4.0.0, change the constraint to `"doctrine/orm": "^4"
 
 #### Sample Config File:
 
-This config file should be placed in your Kipchak project's config directory, as in the starter
-project at https://1x.ax/mamluk/kipchak/starter/~files/master/config/kipchak.doctrine.php.
+This config file should be placed in your Kipchak project's config directory, as in the examples
+project at https://github.com/kipchak-dev/examples/blob/master/config/kipchak.doctrine.php.
 
 The config file should look like this (also avalable in sample.config.php):
 
