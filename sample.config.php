@@ -104,5 +104,16 @@ return
                     // ],
                 ],
             ]
-        ]
+        ],
+
+        // migrations:up (bin/doctrine). Optional: these are the defaults.
+        'migrations' => [
+            // Seconds to wait for the migration lock that another run holds. When it runs out, the command fails
+            // and runs nothing. 0 tries once without waiting.
+            'lock_timeout' => 300,
+            // false: a statement that fails with "already exists" (or a duplicate column or key) is skipped with a
+            // warning and the file is recorded, so a rerun after a half-applied migration recovers. true: that
+            // error fails the migration like any other.
+            'strict' => false,
+        ],
     ];

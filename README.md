@@ -103,7 +103,13 @@ return
                 // ],
             ],
         ]
-    ]
+    ],
+
+    // migrations:up. Optional: these are the defaults. See "Migrations CLI" below.
+    'migrations' => [
+        'lock_timeout' => 300, // seconds to wait for the migration lock
+        'strict' => false,     // true: an "already exists" error fails the migration
+    ],
 ];
 
 ```
@@ -148,6 +154,68 @@ This path is resolved from the consuming project (the app that installs this pac
 Each SQL file holds its up statements, then a line `-- Down` and the statements that undo them. Migrations are recorded
 in the `schema_migrations` table; on PostgreSQL, SQLite and SQL Server each file runs in one transaction. They work on
 SQLite from 1.54: earlier releases recorded each migration with `NOW()`, which SQLite does not have, and failed.
+
+#### The migration lock (from 1.57)
+
+`migrations:up` holds a lock for its whole run, so that two runs against one database, such as two pods starting at
+once, cannot both find a migration unapplied and both execute it. The lock is taken before `schema_migrations` is
+created or read and released when the run ends, whether it succeeded, failed or threw. The second run waits, then
+finds the migrations applied and skips them. The log says so:
+
+```
+Taking the migration lock kipchak.migrations.shop.
+Waiting up to 300 s for the migration lock kipchak.migrations.shop, which another run holds.
+Obtained the migration lock kipchak.migrations.shop after 2.0 s.
+Skipping 2026_01_01_000000_shelves.sql (already applied)
+Released the migration lock kipchak.migrations.shop.
+```
+
+| Platform | Lock |
+|---|---|
+| MySQL, MariaDB | `GET_LOCK` / `RELEASE_LOCK`, named `kipchak.migrations.<database>` |
+| PostgreSQL | `pg_advisory_lock` / `pg_advisory_unlock`, on a bigint key derived from `kipchak.migrations.<database>`; the wait is bounded with `lock_timeout` for that one statement |
+| SQLite | None. SQLite allows one writer at a time and runs each migration in a transaction. |
+| SQL Server and others | None. Do not start two runs at once. |
+
+The name includes the database name, so runs against two databases on one server do not wait for each other. The lock
+belongs to the command's connection: if the process dies, the database releases it when the connection closes.
+
+If the lock is not obtained within `migrations.lock_timeout` seconds, the command prints
+`Did not obtain the migration lock ... No migration was run.` and exits with an error, having created nothing. A
+release that fails (`RELEASE_LOCK` answers 0 or NULL, or the connection is gone) is printed as a warning and does not
+change the exit code.
+
+#### Settings
+
+Both are optional, under `migrations` in `config/kipchak.doctrine.php`:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `migrations.lock_timeout` | `300` | Seconds to wait for the migration lock. `0` tries once without waiting. |
+| `migrations.strict` | `false` | Whether an "already exists" error fails the migration (see below). |
+
+#### "Already exists" errors and strict mode
+
+When a statement fails with "already exists", "Duplicate column name" or "Duplicate key name", and `migrations.strict`
+is off (the default), the statement is skipped, the file is recorded as applied, and a warning names the file and the
+statement:
+
+```
+Warning: 2026_01_02_000000_books.sql: skipped a statement that was already applied (... Table 'books' already exists). Statement: CREATE TABLE books (id INT PRIMARY KEY, ...)
+```
+
+This lets a rerun recover from a migration that failed halfway on MySQL, which cannot roll back schema changes, and lets
+a schema created by other means (for example `orm:schema-tool:create`) be followed by `migrations:up`.
+
+With `migrations.strict` on, such an error fails the migration like any other: the file is rolled back where the
+platform supports transactional schema changes (PostgreSQL, SQLite, SQL Server), it is not recorded, and the command
+exits with an error.
+
+The remaining risk: "already exists" is matched by name only, so a rerun that finds a column or index of the same name
+with a different definition still records the statement as applied. Strict mode catches that.
+
+On PostgreSQL the skip does not help: the failed statement aborts the file's transaction, so the next statement fails
+and the file is rolled back, with strict mode on or off.
 
 ## DBAL middleware
 
@@ -315,12 +383,56 @@ $em->createQuery(
 - Functions are registered per entity manager, so different EMs can advertise different DQL grammars.
 - You can mix vendored function nodes (e.g. `beberlei/doctrineextensions`, `scienta/doctrine-json-functions`) with your own — just point at any `FunctionNode` subclass.
 
+## Release notes
+
+### 1.57
+
+- **`migrations:up` takes a lock for its whole run** (MySQL and MariaDB `GET_LOCK`, PostgreSQL `pg_advisory_lock`; none
+  on SQLite), so two runs started at once no longer apply the same migration twice or skip each other's statements.
+  New setting `migrations.lock_timeout`, default 300 seconds. See "The migration lock" above.
+- **New setting `migrations.strict`**, default `false`. Off, nothing changes: an "already exists" error skips the
+  statement, and the warning now names the migration file and the statement. On, that error fails the migration.
+- **`migrations:up` works on PostgreSQL**: `schema_migrations` was created with a `DATETIME` column, a type PostgreSQL
+  does not have, so the command failed there before applying anything. It now uses `TIMESTAMP` on PostgreSQL.
+- `MigrationsUpCommand` takes an optional second constructor argument, the `migrations` settings; without it they are
+  read from `config/kipchak.doctrine.php`. `bin/doctrine` is unchanged.
+- doctrine/orm: the lock did not move, so there are no upstream changes to record.
+
+## Running the tests
+
+```bash
+composer install
+vendor/bin/phpunit
+```
+
+The suite runs on SQLite without anything else. The migration lock tests also need MySQL 8.4 and PostgreSQL. Start
+both in Docker:
+
+```bash
+docker run -d --name kipchak-test-mysql -e MYSQL_ROOT_PASSWORD=test -p 127.0.0.1:33061:3306 mysql:8.4
+docker run -d --name kipchak-test-pgsql -e POSTGRES_PASSWORD=test -p 127.0.0.1:54331:5432 postgres:17-alpine
+```
+
+then name them in the environment:
+
+```bash
+DOCTRINE_TEST_MYSQL_HOST=127.0.0.1 DOCTRINE_TEST_MYSQL_PORT=33061 DOCTRINE_TEST_MYSQL_USER=root DOCTRINE_TEST_MYSQL_PASSWORD=test \
+DOCTRINE_TEST_PGSQL_HOST=127.0.0.1 DOCTRINE_TEST_PGSQL_PORT=54331 DOCTRINE_TEST_PGSQL_USER=postgres DOCTRINE_TEST_PGSQL_PASSWORD=test \
+vendor/bin/phpunit
+```
+
+Setting a server's `HOST` variable requests its tests, which then fail, rather than skip, if the server cannot be
+reached. Without it they are skipped. Each test creates its own database and drops it afterwards; the user needs the
+right to create databases. Remove the containers afterwards with
+`docker rm -f kipchak-test-mysql kipchak-test-pgsql`.
+
 ## Maintaining this driver
 
 doctrine/orm 4 is unreleased and its `4.0.x-dev` branch moves, so every release of this driver follows two rules:
 
 1. **It is tested against the exact doctrine/orm 4.0.x-dev commit in `composer.lock`.** The suite covers entity mapping,
-   the repository, DQL and the QueryBuilder, custom DQL functions, migrations up and down, and worker-mode
+   the repository, DQL and the QueryBuilder, custom DQL functions, migrations up and down, the migration lock against
+   MySQL and PostgreSQL (see "Running the tests"), and worker-mode
    EntityManager reset (`ReopenableEntityManager`). Each test has a negative control that shows it fails without what
    it checks.
 2. **Whenever the lock moves to a newer 4.0.x-dev commit, Doctrine's changes between the two commits are read**: its

@@ -2,8 +2,13 @@
 
 namespace Kipchak\Driver\Doctrine\Commands;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Console\Command\AbstractEntityManagerCommand;
+use Kipchak\Driver\Config\Config;
+use Kipchak\Driver\Doctrine\Library\MigrationLock\MigrationLock;
+use Kipchak\Driver\Doctrine\Library\MigrationLock\MigrationLocks;
 use Doctrine\ORM\Tools\Console\EntityManagerProvider;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,7 +19,17 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
 {
     protected static $defaultName = 'migrations:up';
 
-    public function __construct(EntityManagerProvider $entityManagerProvider)
+    /** Seconds to wait for the migration lock when migrations.lock_timeout is not set. */
+    public const DEFAULT_LOCK_TIMEOUT = 300;
+
+    /** How much of a skipped statement the warning shows. */
+    private const STATEMENT_PREVIEW_LENGTH = 200;
+
+    /**
+     * @param array<string, mixed>|null $settings the 'migrations' settings (lock_timeout, strict). Null reads them from
+     *                                            the 'migrations' key of config/kipchak.doctrine.php.
+     */
+    public function __construct(EntityManagerProvider $entityManagerProvider, private readonly ?array $settings = null)
     {
         parent::__construct($entityManagerProvider);
     }
@@ -42,9 +57,6 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
         $em = $this->getEntityManager($input);
 
         $conn = $em->getConnection();
-        $conn->executeStatement(
-            'CREATE TABLE IF NOT EXISTS schema_migrations (filename VARCHAR(255) PRIMARY KEY, applied_at DATETIME NOT NULL)'
-        );
 
         $fileOption = $input->getOption('file');
         if (is_string($fileOption) && trim($fileOption) !== '') {
@@ -75,6 +87,85 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
         }
         $this->sortByTimestampFilename($files);
 
+        $settings = $this->settings ?? self::configuredSettings();
+        $lockTimeout = max(0, (int) ($settings['lock_timeout'] ?? self::DEFAULT_LOCK_TIMEOUT));
+        $strict = filter_var($settings['strict'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+        // The lock is held from before schema_migrations is created or read until the run ends, however it ends. It
+        // is taken before the CREATE TABLE IF NOT EXISTS because on PostgreSQL two of those at once on a new database
+        // collide in the system catalogue.
+        $lock = $this->migrationLock($conn);
+        if (!$this->takeLock($lock, $lockTimeout, $output)) {
+            return Command::FAILURE;
+        }
+        try {
+            $conn->executeStatement(self::schemaMigrationsTable($conn));
+
+            return $this->applyMigrations($files, $conn, $strict, $output);
+        } finally {
+            $this->releaseLock($lock, $output);
+        }
+    }
+
+    /**
+     * The lock for this connection's platform. Protected so that a test can switch it off for a control run.
+     */
+    protected function migrationLock(Connection $connection): MigrationLock
+    {
+        return MigrationLocks::for($connection);
+    }
+
+    private function takeLock(MigrationLock $lock, int $timeout, OutputInterface $output): bool
+    {
+        if (!$lock->locks()) {
+            $output->writeln($lock->description());
+            return true;
+        }
+
+        $name = $lock->name();
+        $output->writeln("Taking the migration lock {$name}.");
+        $started = microtime(true);
+        $obtained = $lock->tryAcquire();
+        if (!$obtained && $timeout > 0) {
+            $output->writeln("Waiting up to {$timeout} s for the migration lock {$name}, which another run holds.");
+            $obtained = $lock->acquire($timeout);
+        }
+        if (!$obtained) {
+            $output->writeln("<error>Did not obtain the migration lock {$name} within {$timeout} s. No migration was run.</error>");
+            return false;
+        }
+        $output->writeln(sprintf('Obtained the migration lock %s after %.1f s.', $name, microtime(true) - $started));
+
+        return true;
+    }
+
+    /**
+     * A failed release is a warning and leaves the exit code alone: the database releases the lock when the
+     * connection closes, which happens when this command's process ends.
+     */
+    private function releaseLock(MigrationLock $lock, OutputInterface $output): void
+    {
+        if (!$lock->locks()) {
+            return;
+        }
+
+        $name = $lock->name();
+        try {
+            if ($lock->release()) {
+                $output->writeln("Released the migration lock {$name}.");
+            } else {
+                $output->writeln("<comment>Warning: the database did not confirm the release of the migration lock {$name}. It releases the lock when this connection closes.</comment>");
+            }
+        } catch (\Throwable $e) {
+            $output->writeln("<comment>Warning: could not release the migration lock {$name}: {$e->getMessage()} The database releases the lock when this connection closes.</comment>");
+        }
+    }
+
+    /**
+     * @param list<string> $files
+     */
+    private function applyMigrations(array $files, Connection $conn, bool $strict, OutputInterface $output): int
+    {
         foreach ($files as $file) {
             $filename = basename($file);
             $applied = $conn->fetchOne('SELECT filename FROM schema_migrations WHERE filename = ?', [$filename]);
@@ -115,8 +206,11 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
                         try {
                             $conn->executeStatement($statement);
                         } catch (\Throwable $e) {
-                            if ($this->isGracefulFailure($e)) {
-                                $output->writeln("<comment>Warning: Skipping statement because it was already applied: " . trim($e->getMessage()) . "</comment>");
+                            // migrations.strict off: an "already exists" error skips the statement, as before 1.57.
+                            // On, it fails the migration like any other error.
+                            if (!$strict && $this->isGracefulFailure($e)) {
+                                $output->writeln("<comment>Warning: {$filename}: skipped a statement that was already applied ("
+                                    . trim($e->getMessage()) . '). Statement: ' . $this->statementPreview($statement) . '</comment>');
                                 continue;
                             }
                             throw $e;
@@ -146,6 +240,49 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
         }
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * The 'migrations' settings from config/kipchak.doctrine.php, or none when the Config driver is not available or
+     * not booted, in which case the defaults apply.
+     *
+     * @return array<string, mixed>
+     */
+    private static function configuredSettings(): array
+    {
+        if (!class_exists(Config::class)) {
+            return [];
+        }
+        try {
+            $migrations = Config::get('kipchak.doctrine')['migrations'] ?? [];
+        } catch (\Throwable) {
+            return [];
+        }
+
+        return is_array($migrations) ? $migrations : [];
+    }
+
+    /**
+     * PostgreSQL has no DATETIME type, so the table is created with TIMESTAMP there.
+     */
+    private static function schemaMigrationsTable(Connection $conn): string
+    {
+        $type = $conn->getDatabasePlatform() instanceof PostgreSQLPlatform ? 'TIMESTAMP' : 'DATETIME';
+
+        return "CREATE TABLE IF NOT EXISTS schema_migrations (filename VARCHAR(255) PRIMARY KEY, applied_at {$type} NOT NULL)";
+    }
+
+    /**
+     * The statement on one line, cut to STATEMENT_PREVIEW_LENGTH characters, for the log.
+     */
+    private function statementPreview(string $statement): string
+    {
+        $statement = trim((string) preg_replace('/\s+/', ' ', $statement));
+        if (mb_strlen($statement) <= self::STATEMENT_PREVIEW_LENGTH) {
+            return $statement;
+        }
+
+        return mb_substr($statement, 0, self::STATEMENT_PREVIEW_LENGTH) . '... (' . mb_strlen($statement) . ' characters)';
     }
 
     private function isGracefulFailure(\Throwable $e): bool
