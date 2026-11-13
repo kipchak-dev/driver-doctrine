@@ -2,6 +2,7 @@
 
 namespace Kipchak\Driver\Doctrine\Commands;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Console\Command\AbstractEntityManagerCommand;
 use Doctrine\ORM\Tools\Console\EntityManagerProvider;
@@ -12,9 +13,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class MigrationsDownCommand extends AbstractEntityManagerCommand
 {
+    use MigrationLocking;
+
     protected static $defaultName = 'migrations:down';
 
-    public function __construct(EntityManagerProvider $entityManagerProvider)
+    /**
+     * @param array<string, mixed>|null $settings the 'migrations' settings (lock_timeout). Null reads them from the
+     *                                            'migrations' key of config/kipchak.doctrine.php.
+     */
+    public function __construct(EntityManagerProvider $entityManagerProvider, private readonly ?array $settings = null)
     {
         parent::__construct($entityManagerProvider);
     }
@@ -42,10 +49,23 @@ class MigrationsDownCommand extends AbstractEntityManagerCommand
         $em = $this->getEntityManager($input);
 
         $conn = $em->getConnection();
-        $conn->executeStatement(
-            'CREATE TABLE IF NOT EXISTS schema_migrations (filename VARCHAR(255) PRIMARY KEY, applied_at DATETIME NOT NULL)'
-        );
 
+        // The same lock as migrations:up, held from before schema_migrations is created or read until the run ends.
+        $lock = $this->migrationLock($conn);
+        if (!$this->takeLock($lock, self::lockTimeout(self::migrationSettings($this->settings)), $output)) {
+            return Command::FAILURE;
+        }
+        try {
+            $conn->executeStatement(self::schemaMigrationsTable($conn));
+
+            return $this->revert($input, $output, $conn, $root, $migrationsDir);
+        } finally {
+            $this->releaseLock($lock, $output);
+        }
+    }
+
+    private function revert(InputInterface $input, OutputInterface $output, Connection $conn, string $root, string $migrationsDir): int
+    {
         $fileOption = $input->getOption('file');
         if ($fileOption === null || (is_string($fileOption) && trim($fileOption) === '')) {
             if (!is_dir($migrationsDir)) {

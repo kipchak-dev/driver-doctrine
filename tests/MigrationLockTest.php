@@ -10,6 +10,7 @@ use Doctrine\DBAL\Logging\Middleware as LoggingMiddleware;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
+use Kipchak\Driver\Doctrine\Commands\MigrationsDownCommand;
 use Kipchak\Driver\Doctrine\Commands\MigrationsUpCommand;
 use Kipchak\Driver\Doctrine\Library\MigrationLock\MigrationLocks;
 use Kipchak\Driver\Doctrine\Library\MigrationLock\MysqlMigrationLock;
@@ -288,6 +289,72 @@ final class MigrationLockTest extends TestCase
         self::assertStringContainsString('Failed 2026_01_02_000000_again.sql', $output);
         self::assertNotContains('extra', $this->tables());
         self::assertSame(['2026_01_01_000000_shelves.sql'], $this->applied());
+    }
+
+    public function testDownTakesTheLockAndReleasesIt(): void
+    {
+        (new CommandTester(new MigrationsUpCommand(new SingleManagerProvider($this->em), [])))->execute([]);
+        $lock = new FakeMigrationLock(free: false);
+        $command = new class (new SingleManagerProvider($this->em), $lock) extends MigrationsDownCommand {
+            public function __construct(SingleManagerProvider $provider, private readonly FakeMigrationLock $lock)
+            {
+                parent::__construct($provider, ['lock_timeout' => 4]);
+            }
+
+            protected function migrationLock(\Doctrine\DBAL\Connection $connection): \Kipchak\Driver\Doctrine\Library\MigrationLock\MigrationLock
+            {
+                return $this->lock;
+            }
+        };
+        $tester = new CommandTester($command);
+        $code = $tester->execute([]);
+        $output = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $code, $output);
+        self::assertSame(['try', 'acquire(4)', 'release'], $lock->calls);
+        self::assertStringContainsString('Reverted 2026_01_01_000000_shelves.sql', $output);
+        self::assertStringContainsString('Released the migration lock fake-lock.', $output);
+    }
+
+    public function testDownWithoutTheLockChangesNothing(): void
+    {
+        (new CommandTester(new MigrationsUpCommand(new SingleManagerProvider($this->em), [])))->execute([]);
+        $lock = new FakeMigrationLock(free: false, obtainable: false);
+        $command = new class (new SingleManagerProvider($this->em), $lock) extends MigrationsDownCommand {
+            public function __construct(SingleManagerProvider $provider, private readonly FakeMigrationLock $lock)
+            {
+                parent::__construct($provider, ['lock_timeout' => 1]);
+            }
+
+            protected function migrationLock(\Doctrine\DBAL\Connection $connection): \Kipchak\Driver\Doctrine\Library\MigrationLock\MigrationLock
+            {
+                return $this->lock;
+            }
+        };
+        $tester = new CommandTester($command);
+        $code = $tester->execute([]);
+
+        self::assertSame(Command::FAILURE, $code);
+        self::assertSame(['try', 'acquire(1)'], $lock->calls);
+        self::assertSame(['schema_migrations', 'shelves'], $this->tables());
+        self::assertSame(['2026_01_01_000000_shelves.sql'], $this->applied());
+    }
+
+    public function testDownAttemptsNoLockOnSqlite(): void
+    {
+        (new CommandTester(new MigrationsUpCommand(new SingleManagerProvider($this->em), [])))->execute([]);
+        $this->queries = [];
+        $tester = new CommandTester(new MigrationsDownCommand(new SingleManagerProvider($this->em), []));
+        $code = $tester->execute([]);
+        $output = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $code, $output);
+        self::assertStringContainsString('No migration lock on SQLite', $output);
+        self::assertStringContainsString('Reverted 2026_01_01_000000_shelves.sql', $output);
+        foreach ($this->queries as $sql) {
+            self::assertDoesNotMatchRegularExpression('/GET_LOCK|RELEASE_LOCK|advisory|applock/i', $sql);
+        }
+        self::assertNotEmpty($this->queries);
     }
 
     public function testNoLockIsAttemptedOnSqlite(): void

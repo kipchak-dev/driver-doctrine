@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
+use Kipchak\Driver\Doctrine\Commands\MigrationsDownCommand;
 use Kipchak\Driver\Doctrine\Commands\MigrationsUpCommand;
 use Kipchak\Driver\Doctrine\Library\MigrationLock\MigrationLocks;
 use Kipchak\Driver\Doctrine\Tests\Support\ServerDatabase;
@@ -128,11 +129,83 @@ final class MigrationLockServerTest extends TestCase
         return $outcome;
     }
 
-    private function command(Connection $connection, array $settings): CommandTester
+    /**
+     * @param class-string<MigrationsUpCommand|MigrationsDownCommand> $class
+     */
+    private function command(Connection $connection, array $settings, string $class = MigrationsUpCommand::class): CommandTester
     {
         $em = new EntityManager($connection, ORMSetup::createAttributeMetadataConfig([__DIR__ . '/Fixtures'], true));
 
-        return new CommandTester(new MigrationsUpCommand(new SingleManagerProvider($em), $settings));
+        return new CommandTester(new $class(new SingleManagerProvider($em), $settings));
+    }
+
+    /**
+     * migrations:down on a database where migrations:up never ran creates schema_migrations (with TIMESTAMP on
+     * PostgreSQL, which has no DATETIME) and says there is nothing to revert, under the lock.
+     */
+    #[DataProvider('servers')]
+    public function testDownOnAFreshDatabaseCreatesSchemaMigrations(string $server): void
+    {
+        $database = $this->database($server);
+        $this->migration('2026_01_01_000000_shelves.sql', 'CREATE TABLE shelves (id INT PRIMARY KEY);', 'DROP TABLE shelves;');
+        $connection = $database->connect();
+
+        $tester = $this->command($connection, [], MigrationsDownCommand::class);
+        $code = $tester->execute([]);
+        $output = $tester->getDisplay();
+
+        self::assertSame(Command::FAILURE, $code, $output);
+        self::assertStringContainsString('No applied migrations found.', $output);
+        self::assertSame(['schema_migrations'], $this->tables($connection));
+        self::assertMatchesRegularExpression('/Obtained the migration lock .+ after [0-9.]+ s\./', $output);
+        self::assertStringContainsString('Released the migration lock', $output);
+        $connection->close();
+    }
+
+    #[DataProvider('servers')]
+    public function testDownRevertsUnderTheLock(string $server): void
+    {
+        $database = $this->database($server);
+        $this->migration('2026_01_01_000000_shelves.sql', 'CREATE TABLE shelves (id INT PRIMARY KEY);', 'DROP TABLE shelves;');
+        $connection = $database->connect();
+        self::assertSame(Command::SUCCESS, $this->command($connection, [])->execute([]));
+
+        $tester = $this->command($connection, [], MigrationsDownCommand::class);
+        $code = $tester->execute([]);
+        $output = $tester->getDisplay();
+
+        self::assertSame(Command::SUCCESS, $code, $output);
+        self::assertStringContainsString('Reverted 2026_01_01_000000_shelves.sql', $output);
+        self::assertSame(['schema_migrations'], $this->tables($connection));
+        self::assertStringContainsString('Released the migration lock', $output);
+        $connection->close();
+    }
+
+    #[DataProvider('servers')]
+    public function testDownWaitsForALockHeldElsewhereAndChangesNothing(string $server): void
+    {
+        $database = $this->database($server);
+        $this->migration('2026_01_01_000000_shelves.sql', 'CREATE TABLE shelves (id INT PRIMARY KEY);', 'DROP TABLE shelves;');
+        $connection = $database->connect();
+        self::assertSame(Command::SUCCESS, $this->command($connection, [])->execute([]));
+
+        $holder = $database->connect();
+        $held = MigrationLocks::for($holder);
+        self::assertTrue($held->tryAcquire());
+
+        $tester = $this->command($connection, ['lock_timeout' => 1], MigrationsDownCommand::class);
+        $code = $tester->execute([]);
+        $output = $tester->getDisplay();
+
+        self::assertSame(Command::FAILURE, $code, $output);
+        self::assertStringContainsString('Waiting up to 1 s for the migration lock ' . $held->name(), $output);
+        self::assertStringContainsString('Did not obtain the migration lock ' . $held->name() . ' within 1 s. No migration was run.', $output);
+        self::assertSame(['schema_migrations', 'shelves'], $this->tables($connection));
+        self::assertSame(['2026_01_01_000000_shelves.sql'], $connection->fetchFirstColumn('SELECT filename FROM schema_migrations'));
+
+        self::assertTrue($held->release());
+        $holder->close();
+        $connection->close();
     }
 
     /**

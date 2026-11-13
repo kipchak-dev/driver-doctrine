@@ -179,6 +179,10 @@ Released the migration lock kipchak.migrations.shop.
 
 The name includes the database name, so runs against two databases on one server do not wait for each other. The lock
 belongs to the command's connection: if the process dies, the database releases it when the connection closes.
+`migrations:down` takes the same lock, with the same timeout and messages.
+
+The lock is a session lock, so it does not hold through a transaction-pooling proxy (PgBouncer in transaction mode,
+ProxySQL multiplexing). Run migrations on a direct or session-pooled connection.
 
 If the lock is not obtained within `migrations.lock_timeout` seconds, the command prints
 `Did not obtain the migration lock ... No migration was run.` and exits with an error, having created nothing. A
@@ -389,13 +393,15 @@ $em->createQuery(
 
 - **`migrations:up` takes a lock for its whole run** (MySQL and MariaDB `GET_LOCK`, PostgreSQL `pg_advisory_lock`; none
   on SQLite), so two runs started at once no longer apply the same migration twice or skip each other's statements.
-  New setting `migrations.lock_timeout`, default 300 seconds. See "The migration lock" above.
+  `migrations:down` takes the same lock. New setting `migrations.lock_timeout`, default 300 seconds. See "The
+  migration lock" above.
 - **New setting `migrations.strict`**, default `false`. Off, nothing changes: an "already exists" error skips the
   statement, and the warning now names the migration file and the statement. On, that error fails the migration.
-- **`migrations:up` works on PostgreSQL**: `schema_migrations` was created with a `DATETIME` column, a type PostgreSQL
-  does not have, so the command failed there before applying anything. It now uses `TIMESTAMP` on PostgreSQL.
-- `MigrationsUpCommand` takes an optional second constructor argument, the `migrations` settings; without it they are
-  read from `config/kipchak.doctrine.php`. `bin/doctrine` is unchanged.
+- **`migrations:up` and `migrations:down` work on a new PostgreSQL database**: `schema_migrations` was created with a
+  `DATETIME` column, a type PostgreSQL does not have, so the commands failed there before doing anything. They now use
+  `TIMESTAMP` on PostgreSQL.
+- `MigrationsUpCommand` and `MigrationsDownCommand` take an optional second constructor argument, the `migrations`
+  settings; without it they are read from `config/kipchak.doctrine.php`. `bin/doctrine` is unchanged.
 - doctrine/orm: the lock did not move, so there are no upstream changes to record.
 
 ## Running the tests
