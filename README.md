@@ -67,7 +67,7 @@ return
             'primary' => [
                 // Enables or disables Doctrine metadata caching
                 // for either performance or convenience during development.
-                'dev_mode' => (bool) env('DEBUG', true),
+                'dev_mode' => filter_var(env('DEBUG', 'false'), FILTER_VALIDATE_BOOLEAN), // On only for DEBUG=true, 1, on or yes
 
                 // List of paths where Doctrine will search for metadata.
                 // Metadata can be either YML/XML files or PHP classes annotated
