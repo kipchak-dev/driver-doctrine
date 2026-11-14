@@ -155,6 +155,20 @@ Each SQL file holds its up statements, then a line `-- Down` and the statements 
 in the `schema_migrations` table; on PostgreSQL, SQLite and SQL Server each file runs in one transaction. They work on
 SQLite from 1.54: earlier releases recorded each migration with `NOW()`, which SQLite does not have, and failed.
 
+#### How a file is split into statements (from 1.58)
+
+Statements are sent one at a time. A `;` ends a statement only outside:
+
+- comments: `--` (in MySQL, followed by a space), `#` (MySQL only) and `/* ... */`;
+- quoted strings and identifiers: `'...'`, `"..."` and `` `...` `` (backslash escapes in MySQL strings);
+- PostgreSQL dollar quotes: `$$ ... $$`, `$tag$ ... $tag$`;
+- the `BEGIN ... END` body of a `CREATE TRIGGER`, `PROCEDURE`, `FUNCTION` or `EVENT`.
+
+Each statement reaches the database exactly as written, comments included; a piece made of comments alone is not sent.
+Before 1.58 every `;` ended a statement, so text after a `;` in a comment ran as SQL: `-- note; DROP TABLE keepme`
+dropped the table. A file the splitter cannot read cleanly (a quote, comment or block left open) is split at every `;`
+as before, and a warning names it.
+
 #### The migration lock (from 1.57)
 
 `migrations:up` holds a lock for its whole run, so that two runs against one database, such as two pods starting at
@@ -207,6 +221,15 @@ statement:
 ```
 Warning: 2026_01_02_000000_books.sql: skipped a statement that was already applied (... Table 'books' already exists). Statement: CREATE TABLE books (id INT PRIMARY KEY, ...)
 ```
+
+From 1.58 it is followed by a fixed line for tools to match, which stays stable; match it rather than the warning, whose
+wording may change:
+
+```
+kipchak-migrations: skipped-existing 2026_01_02_000000_books.sql
+```
+
+A migration that fails, in strict mode or otherwise, prints `Failed <file>: <error>`, which also stays stable.
 
 This lets a rerun recover from a migration that failed halfway on MySQL, which cannot roll back schema changes, and lets
 a schema created by other means (for example `orm:schema-tool:create`) be followed by `migrations:up`.
@@ -388,6 +411,26 @@ $em->createQuery(
 - You can mix vendored function nodes (e.g. `beberlei/doctrineextensions`, `scienta/doctrine-json-functions`) with your own — just point at any `FunctionNode` subclass.
 
 ## Release notes
+
+### 1.58
+
+Backward compatible: nothing to change in a project, and no default changes.
+
+- **Text after a `;` in a comment no longer runs as SQL.** `migrations:up` and `migrations:down` split a file with a
+  statement splitter that understands comments, quotes, PostgreSQL dollar quotes and trigger or routine bodies (see "How
+  a file is split into statements"). Before, every `;` ended a statement, so `-- note; DROP TABLE keepme` dropped the
+  table and the migration was reported applied. Strings and routine bodies holding `;` now work too.
+- Statements are sent exactly as written. A file without a `;` in a comment, string or routine body splits exactly as
+  before; this was checked on 147 migration files from 11 Kipchak applications, with identical statements and, replayed
+  into fresh databases, identical schemas. A piece made only of comments is no longer sent: MySQL and SQLite ignored it
+  and PostgreSQL rejected it.
+- A file the splitter cannot read cleanly is split as before, with a warning.
+- A skipped "already exists" statement also prints `kipchak-migrations: skipped-existing <file>`, a line kept stable for
+  tools. Every existing line is unchanged.
+- "Already exists" is recognised exactly as in 1.57.
+
+Minor, not major: the only behaviour that changes is SQL that 1.57 split in the wrong place, which either failed or ran
+text from a comment.
 
 ### 1.57
 

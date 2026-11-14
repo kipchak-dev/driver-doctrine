@@ -9,14 +9,34 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Kipchak\Driver\Config\Config;
 use Kipchak\Driver\Doctrine\Library\MigrationLock\MigrationLock;
 use Kipchak\Driver\Doctrine\Library\MigrationLock\MigrationLocks;
+use Kipchak\Driver\Doctrine\Library\Migrations\StatementSplitter;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * What migrations:up and migrations:down share: the migration lock, the 'migrations' settings and the
- * schema_migrations table.
+ * What migrations:up and migrations:down share: the migration lock, the 'migrations' settings, the
+ * schema_migrations table and splitting a section into statements.
  */
 trait MigrationLocking
 {
+    /**
+     * A migration section's statements, from StatementSplitter. When the splitter cannot read the section cleanly (an
+     * unclosed quote, comment, dollar quote or BEGIN ... END), the section is split as before 1.58, at every ";", and a
+     * warning names the file, so an unusual file runs exactly as it did.
+     *
+     * @return list<string>
+     */
+    private function sectionStatements(string $sql, Connection $conn, string $filename, OutputInterface $output): array
+    {
+        $split = StatementSplitter::split($sql, StatementSplitter::dialectFor($conn->getDatabasePlatform()));
+        if ($split['clean']) {
+            return $split['statements'];
+        }
+        $output->writeln("<comment>Warning: {$filename}: could not find where every statement ends (a quote, comment or "
+            . 'BEGIN ... END block is not closed), so it is split at every ";", as before 1.58.</comment>');
+
+        return StatementSplitter::legacy($sql);
+    }
+
     /**
      * The lock for this connection's platform. Protected so that a test can switch it off for a control run.
      */

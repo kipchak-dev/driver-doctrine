@@ -138,4 +138,68 @@ final class MigrationsTest extends TestCase
         self::assertStringContainsString('No down migration found in 2026_01_03_000000_oneway.sql', $output);
         self::assertContains('notes', $this->tables());
     }
+
+    /**
+     * Card 3057: before 1.58, a last line of "-- note; DROP TABLE keepme" dropped the table and reported Applied.
+     */
+    public function testTextAfterASemicolonInACommentIsNotRun(): void
+    {
+        $this->em->getConnection()->executeStatement('CREATE TABLE keepme (id INTEGER PRIMARY KEY)');
+        file_put_contents($this->project . '/migrations/database/2026_01_03_000000_noted.sql',
+            "CREATE TABLE loans (id INTEGER PRIMARY KEY);\n-- note; DROP TABLE keepme\n-- Down\nDROP TABLE loans; -- and; DROP TABLE keepme\n");
+
+        [$code, $output] = $this->command(MigrationsUpCommand::class);
+
+        self::assertSame(Command::SUCCESS, $code, $output);
+        self::assertContains('loans', $this->tables());
+        self::assertContains('keepme', $this->tables(), 'the DROP in the comment is not run');
+
+        [$code, $output] = $this->command(MigrationsDownCommand::class);
+
+        self::assertSame(Command::SUCCESS, $code, $output);
+        self::assertNotContains('loans', $this->tables());
+        self::assertContains('keepme', $this->tables(), 'nor the one in the down section\'s comment');
+    }
+
+    public function testASkippedStatementPrintsTheWarningAndTheStableLine(): void
+    {
+        $this->em->getConnection()->executeStatement('CREATE TABLE loans (id INTEGER PRIMARY KEY)');
+        file_put_contents($this->project . '/migrations/database/2026_01_03_000000_loans.sql',
+            "CREATE TABLE loans (id INTEGER PRIMARY KEY);\n-- Down\nDROP TABLE loans;\n");
+
+        [$code, $output] = $this->command(MigrationsUpCommand::class);
+
+        self::assertSame(Command::SUCCESS, $code, $output);
+        self::assertStringContainsString('Warning: 2026_01_03_000000_loans.sql: skipped a statement that was already applied', $output);
+        self::assertStringContainsString("kipchak-migrations: skipped-existing 2026_01_03_000000_loans.sql\n", $output);
+        self::assertContains('2026_01_03_000000_loans.sql', $this->applied());
+    }
+
+    public function testADownSectionOfCommentsAloneStillReverts(): void
+    {
+        // As before 1.58: the comment is not sent now, but the section is not "missing", so the file is reverted.
+        file_put_contents($this->project . '/migrations/database/2026_01_03_000000_seed.sql',
+            "INSERT INTO shelves (id, name) VALUES (1, 'a');\n-- Down\n-- nothing to undo, the row may stay\n");
+        $this->command(MigrationsUpCommand::class);
+
+        [$code, $output] = $this->command(MigrationsDownCommand::class);
+
+        self::assertSame(Command::SUCCESS, $code, $output);
+        self::assertStringContainsString('Reverted 2026_01_03_000000_seed.sql', $output);
+        self::assertNotContains('2026_01_03_000000_seed.sql', $this->applied());
+    }
+
+    public function testAFileTheSplitterCannotReadIsSplitAsBefore(): void
+    {
+        // The quote is never closed: the file is split at every ";" as before 1.58, so it fails on its broken
+        // statement exactly as 1.57 did, and a warning says why it was split that way.
+        file_put_contents($this->project . '/migrations/database/2026_01_03_000000_unclosed.sql',
+            "CREATE TABLE loans (id INTEGER PRIMARY KEY);\nINSERT INTO loans VALUES ('1);\n-- Down\nDROP TABLE loans;\n");
+
+        [$code, $output] = $this->command(MigrationsUpCommand::class);
+
+        self::assertStringContainsString('2026_01_03_000000_unclosed.sql: could not find where every statement ends', $output);
+        self::assertSame(Command::FAILURE, $code);
+        self::assertStringContainsString('Failed 2026_01_03_000000_unclosed.sql', $output);
+    }
 }

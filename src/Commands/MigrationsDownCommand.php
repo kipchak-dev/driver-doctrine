@@ -6,6 +6,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Console\Command\AbstractEntityManagerCommand;
 use Doctrine\ORM\Tools\Console\EntityManagerProvider;
+use Kipchak\Driver\Doctrine\Library\Migrations\StatementSplitter;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -114,13 +115,14 @@ class MigrationsDownCommand extends AbstractEntityManagerCommand
                 $downSql[] = $line;
             }
         }
-        $statements = array_filter(array_map('trim', explode(';', implode("\n", $downSql))));
+        $statements = $this->sectionStatements(implode("\n", $downSql), $conn, $filename, $output);
         $platform = $conn->getDatabasePlatform();
         $supportsDdlTransactions = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform
             || $platform instanceof \Doctrine\DBAL\Platforms\SQLitePlatform
             || (class_exists(\Doctrine\DBAL\Platforms\SQLServerPlatform::class) && $platform instanceof \Doctrine\DBAL\Platforms\SQLServerPlatform);
         $useTransaction = $this->shouldUseTransaction($statements, $supportsDdlTransactions);
-        if (count($statements) === 0) {
+        // Judged by the split before 1.58, so a down section of comments alone still reverts, as it did.
+        if (StatementSplitter::legacy(implode("\n", $downSql)) === []) {
             $output->writeln("<error>No down migration found in {$filename}</error>");
             return Command::FAILURE;
         }

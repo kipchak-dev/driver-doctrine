@@ -131,7 +131,7 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
                 }
                 $upSql[] = $line;
             }
-            $statements = array_filter(array_map('trim', explode(';', implode("\n", $upSql))));
+            $statements = $this->sectionStatements(implode("\n", $upSql), $conn, $filename, $output);
             $platform = $conn->getDatabasePlatform();
             $supportsDdlTransactions = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform
                 || $platform instanceof \Doctrine\DBAL\Platforms\SQLitePlatform
@@ -155,6 +155,8 @@ class MigrationsUpCommand extends AbstractEntityManagerCommand
                             if (!$strict && $this->isGracefulFailure($e)) {
                                 $output->writeln("<comment>Warning: {$filename}: skipped a statement that was already applied ("
                                     . trim($e->getMessage()) . '). Statement: ' . $this->statementPreview($statement) . '</comment>');
+                                // A fixed line for tools to match, kept stable from 1.58; the warning's wording may change.
+                                $output->writeln("kipchak-migrations: skipped-existing {$filename}");
                                 continue;
                             }
                             throw $e;
