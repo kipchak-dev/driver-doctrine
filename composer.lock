@@ -178,16 +178,16 @@
         },
         {
             "name": "doctrine/dbal",
-            "version": "4.5.1",
+            "version": "4.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/dbal.git",
-                "reference": "b2815456989aa41964ee66d7ab47b7885264acf3"
+                "reference": "1b56fbfb22704712786fea81ff4bb156fcc6427e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/b2815456989aa41964ee66d7ab47b7885264acf3",
-                "reference": "b2815456989aa41964ee66d7ab47b7885264acf3",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/1b56fbfb22704712786fea81ff4bb156fcc6427e",
+                "reference": "1b56fbfb22704712786fea81ff4bb156fcc6427e",
                 "shasum": ""
             },
             "require": {
@@ -207,7 +207,8 @@
                 "slevomat/coding-standard": "8.31.1",
                 "squizlabs/php_codesniffer": "4.0.4",
                 "symfony/cache": "^6.3.8|^7.0|^8.0",
-                "symfony/console": "^5.4|^6.3|^7.0|^8.0"
+                "symfony/console": "^5.4|^6.3|^7.0|^8.0",
+                "symfony/service-contracts": "^2.2 || ^3.0"
             },
             "suggest": {
                 "symfony/console": "For helpful console commands such as SQL execution and import of files."
@@ -264,7 +265,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/dbal/issues",
-                "source": "https://github.com/doctrine/dbal/tree/4.5.1"
+                "source": "https://github.com/doctrine/dbal/tree/4.6.0"
             },
             "funding": [
                 {
@@ -280,8 +281,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-10T09:21:59+00:00",
-            "published-time": "2026-11-10T09:33:50+00:00"
+            "time": "2026-11-14T18:08:09+00:00",
+            "published-time": "2026-11-14T18:18:19+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -517,16 +518,16 @@
         },
         {
             "name": "doctrine/instantiator",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/instantiator.git",
-                "reference": "23da848e1a2308728fe5fdddabf4be17ff9720c7"
+                "reference": "bf3870fbe25c1b5f4febaf281be76d1e2d86df30"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/instantiator/zipball/23da848e1a2308728fe5fdddabf4be17ff9720c7",
-                "reference": "23da848e1a2308728fe5fdddabf4be17ff9720c7",
+                "url": "https://api.github.com/repos/doctrine/instantiator/zipball/bf3870fbe25c1b5f4febaf281be76d1e2d86df30",
+                "reference": "bf3870fbe25c1b5f4febaf281be76d1e2d86df30",
                 "shasum": ""
             },
             "require": {
@@ -536,15 +537,15 @@
                 "doctrine/coding-standard": "^14",
                 "ext-pdo": "*",
                 "ext-phar": "*",
-                "phpbench/phpbench": "^1.2",
-                "phpstan/phpstan": "^2.1",
-                "phpstan/phpstan-phpunit": "^2.0",
-                "phpunit/phpunit": "^10.5.58"
+                "phpbench/phpbench": "^1.7",
+                "phpstan/phpstan": "^2.3",
+                "phpstan/phpstan-phpunit": "^2.1",
+                "phpunit/phpunit": "^13.4.6"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Doctrine\\Instantiator\\": "src/Doctrine/Instantiator/"
+                    "Doctrine\\Instantiator\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -566,7 +567,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/instantiator/issues",
-                "source": "https://github.com/doctrine/instantiator/tree/2.1.0"
+                "source": "https://github.com/doctrine/instantiator/tree/2.2.0"
             },
             "funding": [
                 {
@@ -582,8 +583,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-05T06:47:08+00:00",
-            "published-time": "2026-01-06T07:25:40+00:00"
+            "time": "2026-11-15T20:06:55+00:00",
+            "published-time": "2026-11-15T20:08:11+00:00"
         },
         {
             "name": "doctrine/lexer",
@@ -667,12 +668,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/orm.git",
-                "reference": "d1003fcc807509051826165c8f2c70f0984aba1e"
+                "reference": "730175d867a6b8846998b36958272960969af32b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/orm/zipball/d1003fcc807509051826165c8f2c70f0984aba1e",
-                "reference": "d1003fcc807509051826165c8f2c70f0984aba1e",
+                "url": "https://api.github.com/repos/doctrine/orm/zipball/730175d867a6b8846998b36958272960969af32b",
+                "reference": "730175d867a6b8846998b36958272960969af32b",
                 "shasum": ""
             },
             "require": {
@@ -693,9 +694,10 @@
             },
             "require-dev": {
                 "doctrine/coding-standard": "^14.0",
+                "doctrine/orm-plugin-second-level-cache": "^1.0",
                 "phpbench/phpbench": "^1.0",
                 "phpstan/extension-installer": "^1.4",
-                "phpstan/phpstan": "2.1.23",
+                "phpstan/phpstan": "2.3.5",
                 "phpstan/phpstan-deprecation-rules": "^2",
                 "phpunit/phpunit": "^11.5.42",
                 "psr/log": "^1 || ^2 || ^3",
@@ -703,6 +705,7 @@
                 "symfony/var-exporter": "^6.3.9 || ^7.0 || ^8.0"
             },
             "suggest": {
+                "doctrine/orm-plugin-second-level-cache": "Second level cache functionality needs extra package.",
                 "ext-dom": "Provides support for XSD validation for XML mapping files",
                 "symfony/cache": "Provides cache support for Setup Tool with doctrine/cache 2.0"
             },
@@ -748,8 +751,8 @@
                 "issues": "https://github.com/doctrine/orm/issues",
                 "source": "https://github.com/doctrine/orm/tree/4.0.x"
             },
-            "time": "2026-09-04T10:52:37+00:00",
-            "published-time": "2026-09-04T10:52:42+00:00"
+            "time": "2026-11-14T16:37:01+00:00",
+            "published-time": "2026-11-14T16:37:11+00:00"
         },
         {
             "name": "doctrine/persistence",
@@ -905,16 +908,16 @@
         },
         {
             "name": "kipchak/core",
-            "version": "3.20",
+            "version": "3.22",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kipchak-dev/core.git",
-                "reference": "f9ecdd7342f2b722193479f051024efbc7d35833"
+                "reference": "db2da1d27f2cb94dbb50d524f1a3d61c7af21e2b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kipchak-dev/core/zipball/f9ecdd7342f2b722193479f051024efbc7d35833",
-                "reference": "f9ecdd7342f2b722193479f051024efbc7d35833",
+                "url": "https://api.github.com/repos/kipchak-dev/core/zipball/db2da1d27f2cb94dbb50d524f1a3d61c7af21e2b",
+                "reference": "db2da1d27f2cb94dbb50d524f1a3d61c7af21e2b",
                 "shasum": ""
             },
             "require": {
@@ -945,23 +948,23 @@
                 "microservices"
             ],
             "support": {
-                "source": "https://github.com/kipchak-dev/core/tree/3.20"
+                "source": "https://github.com/kipchak-dev/core/tree/3.22"
             },
-            "time": "2026-11-12T13:46:48+00:00",
-            "published-time": "2026-11-12T13:48:44+00:00"
+            "time": "2026-11-17T03:01:17+00:00",
+            "published-time": "2026-11-17T03:02:09+00:00"
         },
         {
             "name": "kipchak/driver-config",
-            "version": "1.35",
+            "version": "1.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kipchak-dev/driver-config.git",
-                "reference": "a252b409f68fdf841b978f67346b8d0d485d48c8"
+                "reference": "5d0622efd6cca8cd1aea5a4dc81500e4c207fb47"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kipchak-dev/driver-config/zipball/a252b409f68fdf841b978f67346b8d0d485d48c8",
-                "reference": "a252b409f68fdf841b978f67346b8d0d485d48c8",
+                "url": "https://api.github.com/repos/kipchak-dev/driver-config/zipball/5d0622efd6cca8cd1aea5a4dc81500e4c207fb47",
+                "reference": "5d0622efd6cca8cd1aea5a4dc81500e4c207fb47",
                 "shasum": ""
             },
             "require": {
@@ -998,23 +1001,23 @@
                 "microservices"
             ],
             "support": {
-                "source": "https://github.com/kipchak-dev/driver-config/tree/1.35"
+                "source": "https://github.com/kipchak-dev/driver-config/tree/1.36"
             },
-            "time": "2026-11-12T13:49:16+00:00",
-            "published-time": "2026-11-12T13:50:22+00:00"
+            "time": "2026-11-17T03:03:01+00:00",
+            "published-time": "2026-11-17T03:04:26+00:00"
         },
         {
             "name": "kipchak/driver-filecache",
-            "version": "1.35",
+            "version": "1.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kipchak-dev/driver-filecache.git",
-                "reference": "954cd9fd0219b9ac02efb87e26d7507b33cac740"
+                "reference": "5ba02f2e71f6349b513e289471d2a34969b754dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kipchak-dev/driver-filecache/zipball/954cd9fd0219b9ac02efb87e26d7507b33cac740",
-                "reference": "954cd9fd0219b9ac02efb87e26d7507b33cac740",
+                "url": "https://api.github.com/repos/kipchak-dev/driver-filecache/zipball/5ba02f2e71f6349b513e289471d2a34969b754dc",
+                "reference": "5ba02f2e71f6349b513e289471d2a34969b754dc",
                 "shasum": ""
             },
             "require": {
@@ -1055,23 +1058,23 @@
                 "microservices"
             ],
             "support": {
-                "source": "https://github.com/kipchak-dev/driver-filecache/tree/1.35"
+                "source": "https://github.com/kipchak-dev/driver-filecache/tree/1.36"
             },
-            "time": "2026-11-12T13:49:20+00:00",
-            "published-time": "2026-11-12T13:50:34+00:00"
+            "time": "2026-11-17T03:03:05+00:00",
+            "published-time": "2026-11-17T03:04:32+00:00"
         },
         {
             "name": "kipchak/driver-logger",
-            "version": "1.40",
+            "version": "1.41",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kipchak-dev/driver-logger.git",
-                "reference": "6054ab57e5316470718b1a69fd15d871d055f228"
+                "reference": "a76dac7940578cd0a0f9a70ea20693fe897b3d14"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kipchak-dev/driver-logger/zipball/6054ab57e5316470718b1a69fd15d871d055f228",
-                "reference": "6054ab57e5316470718b1a69fd15d871d055f228",
+                "url": "https://api.github.com/repos/kipchak-dev/driver-logger/zipball/a76dac7940578cd0a0f9a70ea20693fe897b3d14",
+                "reference": "a76dac7940578cd0a0f9a70ea20693fe897b3d14",
                 "shasum": ""
             },
             "require": {
@@ -1112,10 +1115,10 @@
                 "microservices"
             ],
             "support": {
-                "source": "https://github.com/kipchak-dev/driver-logger/tree/1.40"
+                "source": "https://github.com/kipchak-dev/driver-logger/tree/1.41"
             },
-            "time": "2026-11-12T13:51:18+00:00",
-            "published-time": "2026-11-12T13:56:06+00:00"
+            "time": "2026-11-17T03:05:37+00:00",
+            "published-time": "2026-11-17T03:10:00+00:00"
         },
         {
             "name": "laravel/serializable-closure",
@@ -1181,16 +1184,16 @@
         },
         {
             "name": "monolog/monolog",
-            "version": "3.12.1",
+            "version": "3.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Seldaek/monolog.git",
-                "reference": "d7059e4c691d05ea1222b5124bed0f961be46e15"
+                "reference": "1f5f55bb4a9a230ff6d8a4ceccea31d10b0142ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/d7059e4c691d05ea1222b5124bed0f961be46e15",
-                "reference": "d7059e4c691d05ea1222b5124bed0f961be46e15",
+                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/1f5f55bb4a9a230ff6d8a4ceccea31d10b0142ac",
+                "reference": "1f5f55bb4a9a230ff6d8a4ceccea31d10b0142ac",
                 "shasum": ""
             },
             "require": {
@@ -1270,7 +1273,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Seldaek/monolog/issues",
-                "source": "https://github.com/Seldaek/monolog/tree/3.12.1"
+                "source": "https://github.com/Seldaek/monolog/tree/3.13.0"
             },
             "funding": [
                 {
@@ -1282,8 +1285,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-29T19:21:12+00:00",
-            "published-time": "2026-09-29T19:21:44+00:00"
+            "time": "2026-11-16T10:43:05+00:00",
+            "published-time": "2026-11-16T10:45:37+00:00"
         },
         {
             "name": "nikic/fast-route",
@@ -1954,22 +1957,22 @@
         },
         {
             "name": "radebatz/type-info-extras",
-            "version": "1.0.14",
+            "version": "1.0.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DerManoMann/type-info-extras.git",
-                "reference": "08ac334a97e92c890eec6f644a6555fdf225fa8d"
+                "reference": "adb5082eae14dde073293f6674ce203f81dbb7ec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DerManoMann/type-info-extras/zipball/08ac334a97e92c890eec6f644a6555fdf225fa8d",
-                "reference": "08ac334a97e92c890eec6f644a6555fdf225fa8d",
+                "url": "https://api.github.com/repos/DerManoMann/type-info-extras/zipball/adb5082eae14dde073293f6674ce203f81dbb7ec",
+                "reference": "adb5082eae14dde073293f6674ce203f81dbb7ec",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.2",
                 "phpstan/phpdoc-parser": "^2.0",
-                "symfony/type-info": "^7.3.8 || ^7.4.1 || ^8.0 || ^8.1-@dev"
+                "symfony/type-info": "^7.3.8 || ^7.4.1 || >=8.0 <8.3@dev"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.70",
@@ -2011,10 +2014,10 @@
             ],
             "support": {
                 "issues": "https://github.com/DerManoMann/type-info-extras/issues",
-                "source": "https://github.com/DerManoMann/type-info-extras/tree/1.0.14"
+                "source": "https://github.com/DerManoMann/type-info-extras/tree/1.0.15"
             },
-            "time": "2026-11-12T03:41:43+00:00",
-            "published-time": "2026-11-12T03:43:08+00:00"
+            "time": "2026-11-16T22:02:45+00:00",
+            "published-time": "2026-11-16T22:06:15+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
@@ -2063,16 +2066,16 @@
         },
         {
             "name": "slim/psr7",
-            "version": "1.8.0",
+            "version": "1.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/slimphp/Slim-Psr7.git",
-                "reference": "76e7e3b1cdfd583e9035c4c966c08e01e45ce959"
+                "reference": "439b6215fdd8314507c50c13a8aed4c1e50ee1f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/slimphp/Slim-Psr7/zipball/76e7e3b1cdfd583e9035c4c966c08e01e45ce959",
-                "reference": "76e7e3b1cdfd583e9035c4c966c08e01e45ce959",
+                "url": "https://api.github.com/repos/slimphp/Slim-Psr7/zipball/439b6215fdd8314507c50c13a8aed4c1e50ee1f2",
+                "reference": "439b6215fdd8314507c50c13a8aed4c1e50ee1f2",
                 "shasum": ""
             },
             "require": {
@@ -2136,10 +2139,10 @@
             ],
             "support": {
                 "issues": "https://github.com/slimphp/Slim-Psr7/issues",
-                "source": "https://github.com/slimphp/Slim-Psr7/tree/1.8.0"
+                "source": "https://github.com/slimphp/Slim-Psr7/tree/1.8.1"
             },
-            "time": "2025-11-02T17:51:19+00:00",
-            "published-time": "2025-11-05T19:46:07+00:00"
+            "time": "2026-11-15T16:43:58+00:00",
+            "published-time": "2026-11-15T16:46:41+00:00"
         },
         {
             "name": "slim/slim",
@@ -3110,16 +3113,16 @@
         },
         {
             "name": "symfony/polyfill-php85",
-            "version": "v1.43.0",
+            "version": "v1.44.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php85.git",
-                "reference": "86a42cbcc07adc331481a5ab310a4024bfc227f6"
+                "reference": "94c794cb5ba51784bc259f11e9f128593297d8dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/86a42cbcc07adc331481a5ab310a4024bfc227f6",
-                "reference": "86a42cbcc07adc331481a5ab310a4024bfc227f6",
+                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/94c794cb5ba51784bc259f11e9f128593297d8dc",
+                "reference": "94c794cb5ba51784bc259f11e9f128593297d8dc",
                 "shasum": ""
             },
             "require": {
@@ -3166,7 +3169,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php85/tree/v1.43.0"
+                "source": "https://github.com/symfony/polyfill-php85/tree/v1.44.0"
             },
             "funding": [
                 {
@@ -3186,8 +3189,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-25T15:46:47+00:00",
-            "published-time": "2026-09-30T10:23:32+00:00"
+            "time": "2026-10-30T15:20:09+00:00",
+            "published-time": "2026-11-15T14:20:22+00:00"
         },
         {
             "name": "symfony/polyfill-php86",
@@ -4334,16 +4337,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "12.5.43",
+            "version": "12.5.44",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "1d5a4a3c98fa1ca3a51402c74b66c2c8df85e0bb"
+                "reference": "47d052b58672b016b512974c1139346306c8ca24"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/1d5a4a3c98fa1ca3a51402c74b66c2c8df85e0bb",
-                "reference": "1d5a4a3c98fa1ca3a51402c74b66c2c8df85e0bb",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/47d052b58672b016b512974c1139346306c8ca24",
+                "reference": "47d052b58672b016b512974c1139346306c8ca24",
                 "shasum": ""
             },
             "require": {
@@ -4371,7 +4374,7 @@
                 "sebastian/object-enumerator": "^7.0.0",
                 "sebastian/recursion-context": "^7.0.1",
                 "sebastian/type": "^6.0.4",
-                "sebastian/version": "^6.0.1",
+                "sebastian/version": "^6.0.2",
                 "staabm/side-effects-detector": "^1.0.5"
             },
             "bin": [
@@ -4412,7 +4415,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.43"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.44"
             },
             "funding": [
                 {
@@ -4420,8 +4423,8 @@
                     "type": "other"
                 }
             ],
-            "time": "2026-11-02T07:10:00+00:00",
-            "published-time": "2026-11-02T07:10:59+00:00"
+            "time": "2026-11-13T11:09:06+00:00",
+            "published-time": "2026-11-13T11:09:57+00:00"
         },
         {
             "name": "sebastian/cli-parser",
